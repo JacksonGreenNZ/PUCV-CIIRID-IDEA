@@ -103,9 +103,6 @@ def checkSatelliteIntersect(t):
            print("Satellite {satellite.name} is near the Target")
            print("  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
            print("  - Angular separation: {difference_angle}\n")
-        else: 
-            print("No intersection at ", t)
-
     
 def main():
     checkOverhead() 
