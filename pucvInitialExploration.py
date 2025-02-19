@@ -69,11 +69,11 @@ def checkTargetPosition(t):
     astrometric = ssb_warkworth.at(t).observe(barnard)
     apparent = astrometric.apparent()
     
-    #Alt/Az apparent 
-    alt_target, az_target, distance_target = apparent.altaz()
-    print("At ", t.utc_strftime())
-    print("Altitude = ", alt_target.dstr())
-    print("Azimuth = ", az_target.dstr())
+    # #Alt/Az apparent 
+    # alt_target, az_target, distance_target = apparent.altaz()
+    # print("At ", t.utc_strftime())
+    # print("Altitude = ", alt_target.dstr())
+    # print("Azimuth = ", az_target.dstr())
     return apparent
 
 def timeRange(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
@@ -100,15 +100,16 @@ def checkSatelliteIntersect(t):
         difference_angle = checkTargetPosition(t).separation_from(topocentric)
         threshold_degrees = 5
         if difference_angle.degrees < threshold_degrees:
-           print(f"Satellite {satellite.name} is near the Target")
-           print(f"  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
-           print(f"  - Angular separation: {difference_angle}\n")
+           print("Satellite {satellite.name} is near the Target")
+           print("  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
+           print("  - Angular separation: {difference_angle}\n")
+        else: 
+            print("No intersection at ", t)
 
     
 def main():
     checkOverhead() 
     timeRange(2025,1,1,8,0,0, 2025,1,1,8,1,0)
-    checkSatelliteIntersect(ts.utc(2025,1,1,8,0,0))
 
 main()
 
