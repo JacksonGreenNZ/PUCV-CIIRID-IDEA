@@ -23,16 +23,17 @@ ts = load.timescale()
 sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
 print('Loaded', len(sats), 'satellites')
 
-def check_overhead():
-    # Event names
+warkworth = wgs84.latlon(-36, +174, elevation_m=43)
+ssb_warkworth = earth + warkworth
+
+def checkOverhead():
     event_names = ['rise above 5°', 'culminate', 'set below 5°']
     satellites_interfere = [] #array to store any satellites that will be 
     #overhead during timeframe
     
     # Iterate through each satellite and check rise, culmination, and fall
     for satellite in sats:
-        
-        warkworth = wgs84.latlon(-36, +174)
+
         
         t0 = ts.utc(2025, 1, 1, 8)
         t1 = ts.utc(2025, 1, 1, 14)
@@ -60,31 +61,22 @@ def check_overhead():
 #crossreference with the satellites that rise or fall and their position at 
 #each time, we can determine interference. 
 
-# EVERYTHING ABOVE THIS WORKS
-
-def check_target_position(t):
+def checkTargetPosition(t):
 
     #example target for observation: barnards star:
     barnard = Star(ra_hours=(17, 57, 48.49803), dec_degrees=(4, 41, 36.2072))
     
-    warkworth = earth + wgs84.latlon(-36 * N, 174 * W, elevation_m=43)
-    
-    astrometric = warkworth.at(t).observe(barnard)
+    astrometric = ssb_warkworth.at(t).observe(barnard)
     apparent = astrometric.apparent()
     
-    #ra, dec
-    ra, dec, distance = astrometric.radec()
-    
-    #ra, dec apparent
-    ra, dec, distance = apparent.radec('date')
-    
     #Alt/Az apparent 
-    alt, az, distance = apparent.altaz()
+    alt_target, az_target, distance_target = apparent.altaz()
     print("At ", t.utc_strftime())
-    print("Altitude = ", alt.dstr())
-    print("Azimuth = ", az.dstr())
+    print("Altitude = ", alt_target.dstr())
+    print("Azimuth = ", az_target.dstr())
+    return apparent
 
-def timerange(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
+def timeRange(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
     times=[]
     t_init = ts.utc(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond)
     t_end = ts.utc(endyear, endmonth, endday, endhour, endminute, endsecond)
@@ -98,19 +90,30 @@ def timerange(initialyear, initialmonth, initialday, initialhour, initialminute,
         t_temp = t_temp+one_second
         times.append(t_temp)
     for x in times:
-        check_target_position(x)
+        checkSatelliteIntersect(x)
 
+def checkSatelliteIntersect(t):
+    for satellite in sats:
+        difference = satellite - warkworth
+        topocentric = difference.at(t)
+        alt_sat, az_sat, distance_sat = topocentric.altaz()
+        difference_angle = checkTargetPosition(t).separation_from(topocentric)
+        threshold_degrees = 5
+        if difference_angle.degrees < threshold_degrees:
+           print(f"Satellite {satellite.name} is near the Target")
+           print(f"  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
+           print(f"  - Angular separation: {difference_angle}\n")
+
+    
 def main():
-    check_overhead() 
-    timerange(2025,1,1,8,0,0, 2025,1,1,8,1,0)
+    checkOverhead() 
+    timeRange(2025,1,1,8,0,0, 2025,1,1,8,1,0)
+    checkSatelliteIntersect(ts.utc(2025,1,1,8,0,0))
 
 main()
 
-
-
-#EVERYTHING ABOVE THIS WORKS
-
-""" NOT WORKING
+#NOT WORKING
+""" 
 line1 = '1 25544U 98067A   14020.93268519  .00009878  00000-0  18200-3 0  5082'
 line2 = '2 25544  51.6498 109.4756 0003572  55.9686 274.8005 15.49815350868473'
 satellite = EarthSatellite(line1, line2, 'ISS (ZARYA)', ts)
