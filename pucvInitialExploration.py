@@ -2,30 +2,6 @@ import csv
 from skyfield.api import EarthSatellite, load, wgs84, Star, N,W
 import numpy as np
 
-planets = load('de421.bsp')
-earth = planets['earth']
-
-#loading stations only to limit computation
-
-max_days = 7.0         # download again once 7 days old
-name = 'stations.csv'  # custom filename, not 'gp.php'
-
-base = 'https://celestrak.org/NORAD/elements/gp.php'
-url = base + '?GROUP=stations&FORMAT=csv'
-
-if not load.exists(name) or load.days_old(name) >= max_days:
-    load.download(url, filename=name)
-
-with load.open('stations.csv', mode='r') as f:
-    data = list(csv.DictReader(f))
-
-ts = load.timescale()
-sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
-print('Loaded', len(sats), 'satellites')
-
-warkworth = wgs84.latlon(-36, +174, elevation_m=43)
-ssb_warkworth = earth + warkworth
-
 def checkOverhead():
     event_names = ['rise above 5°', 'culminate', 'set below 5°']
     satellites_interfere = [] #array to store any satellites that will be 
@@ -76,6 +52,20 @@ def checkTargetPosition(t):
     # print("Azimuth = ", az_target.dstr())
     return apparent
 
+def displayTargetPosition(t):
+
+    #example target for observation: barnards star:
+    barnard = Star(ra_hours=(17, 57, 48.49803), dec_degrees=(4, 41, 36.2072))
+    
+    astrometric = ssb_warkworth.at(t).observe(barnard)
+    apparent = astrometric.apparent()
+    
+    #Alt/Az apparent 
+    alt_target, az_target, distance_target = apparent.altaz()
+    print("At ", t.utc_strftime())
+    print("Altitude = ", alt_target.dstr())
+    print("Azimuth = ", az_target.dstr())
+
 def timeRange(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
     times=[]
     t_init = ts.utc(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond)
@@ -89,8 +79,7 @@ def timeRange(initialyear, initialmonth, initialday, initialhour, initialminute,
     for i in range(steps):
         t_temp = t_temp+one_second
         times.append(t_temp)
-    for x in times:
-        checkSatelliteIntersect(x)
+        checkSatelliteIntersect(t_temp)     
 
 def checkSatelliteIntersect(t):
     for satellite in sats:
@@ -105,37 +94,40 @@ def checkSatelliteIntersect(t):
            print("  - Angular separation: {difference_angle}\n")
     
 def main():
-    checkOverhead() 
+    
+    global earth
+    global warkworth
+    global ssb_warkworth
+    global ts
+    global sats
+    
+    planets = load('de421.bsp')
+    earth = planets['earth']
+    
+    #loading stations only to limit computation
+    
+    max_days = 7.0         # download again once 7 days old
+    name = 'stations.csv'  # custom filename, not 'gp.php'
+    
+    base = 'https://celestrak.org/NORAD/elements/gp.php'
+    url = base + '?GROUP=stations&FORMAT=csv'
+    
+    if not load.exists(name) or load.days_old(name) >= max_days:
+        load.download(url, filename=name)
+    
+    with load.open('stations.csv', mode='r') as f:
+        data = list(csv.DictReader(f))
+    
+    ts = load.timescale()
+    sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
+    print('Loaded', len(sats), 'satellites')
+    
+    warkworth = wgs84.latlon(-36, +174, elevation_m=43)
+    ssb_warkworth = earth + warkworth
+    
+    #checkOverhead() 
     timeRange(2025,1,1,8,0,0, 2025,1,1,8,1,0)
 
 main()
-
-#NOT WORKING
-""" 
-line1 = '1 25544U 98067A   14020.93268519  .00009878  00000-0  18200-3 0  5082'
-line2 = '2 25544  51.6498 109.4756 0003572  55.9686 274.8005 15.49815350868473'
-satellite = EarthSatellite(line1, line2, 'ISS (ZARYA)', ts)
-
-warkworth2 = earth + Topos(latitude_degrees=-36, longitude_degrees=174, elevation_m=43)
-
-# Compute the satellite's position at the same time t
-satellite_position = satellite.at(t)
-
-# Compute the observer's position at time t
-observer_position = warkworth.at(t)
-
-# Compute the difference (relative position between satellite and observer)
-difference = satellite_position - observer_position
-
-topocentric = difference.at(t)
-print(topocentric.position.km)
-alt, az, distance = topocentric.altaz()
-
-if alt.degrees > 0:
-    print('The ISS is above the horizon')
-    print('Altitude:', alt)
-    print('Azimuth:', az)
-"""
-
 
     
