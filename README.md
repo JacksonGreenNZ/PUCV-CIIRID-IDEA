@@ -1,33 +1,33 @@
-OVERVIEW
+#OVERVIEW
 
 This Python script tracks the apparent position of an astronomical target as seen from a ground station and checks for potential satellite intersections. It then visualises the results in a 3D plot. 
 The script uses the Skyfield library for precise celestial mechanics calculations.
 
-FUNCTIONS
+#FUNCTIONS
 
-1. checkTargetPosition(t, target)
-This function determines the apparent position of a celestial target from the observing station at a given time t.
+**1. checkTargetPosition(t, target)**
+  This function determines the apparent position of a celestial target from the observing station at a given time t.
 
 Inputs:
-t: A Skyfield time object
-target: A Skyfield Star object
+  t: A Skyfield time object
+  target: A Skyfield Star object
 
 Returns:
-The apparent position of the target in the sky (altitude, azimuth, etc.).
+  The apparent position of the target in the sky (altitude, azimuth, etc.).
 
 
 2. timeRange(target, t_init, t_end)
-This function tracks the target over a given time range and logs its position every second. It also checks for satellite intersections.
+  This function tracks the target over a given time range and logs its position every second. It also checks for satellite intersections.
 
 Inputs:
-target: The celestial object being observed
-t_init: Start time (Skyfield time object)
-t_end: End time (Skyfield time object)
+  target: The celestial object being observed
+  t_init: Start time (Skyfield time object)
+  t_end: End time (Skyfield time object)
 
 Outputs:
-Prints the altitude and azimuth of the target for each second.
-Checks for satellites within a 2-degree range.
-Calls plot_3d() to visualise data.
+  Prints the altitude and azimuth of the target for each second.
+  Checks for satellites within a 2-degree range.
+  Calls plot_3d() to visualise data.
 
 
 3. checkSatelliteIntersect(t, target, targPos)
