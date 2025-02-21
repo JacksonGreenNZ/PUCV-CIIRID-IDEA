@@ -1,3 +1,5 @@
+#NOTE - CODE NO LONGER USED
+
 import csv
 from skyfield.api import EarthSatellite, load
 
