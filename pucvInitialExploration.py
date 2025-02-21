@@ -55,10 +55,8 @@ def displayTargetPosition(t, target):
     print("Altitude = ", alt_target.dstr())
     print("Azimuth = ", az_target.dstr())
 
-def timeRange(target, initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
+def timeRange(target, t_init, t_end):
     times=[]
-    t_init = ts.utc(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond)
-    t_end = ts.utc(endyear, endmonth, endday, endhour, endminute, endsecond)
     t_dif = t_end-t_init
     one_second = np.float64(0.00001157407)
     steps = int(t_dif/one_second)
@@ -77,7 +75,7 @@ def checkSatelliteIntersect(t, target):
         topocentric = difference.at(t)
         alt_sat, az_sat, distance_sat = topocentric.altaz()
         difference_angle = checkTargetPosition(t, target).separation_from(topocentric)
-        threshold_degrees = 5
+        threshold_degrees = 2
         if difference_angle.degrees < threshold_degrees:
            print("Satellite {satellite.name} is near the Target")
            print("  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
@@ -85,8 +83,23 @@ def checkSatelliteIntersect(t, target):
     
     
 #add function to graph position of target and any satellites that cross -  3d with ra, dec, time/2d antimated over time? 
-#add function to decide which satellite set to use
 
+def selectData(type):
+    max_days = 7.0         # download again once 7 days old
+    name = f'{type}.csv'   # custom filename based on type
+    
+    base = 'https://celestrak.org/NORAD/elements/gp.php'
+    url = f'{base}?GROUP={type}&FORMAT=csv'  # dynamically insert type
+    
+    if not load.exists(name) or load.days_old(name) >= max_days:
+        load.download(url, filename=name)
+    
+    with load.open(name, mode='r') as f:
+        data = list(csv.DictReader(f))
+        
+    sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
+    print('Loaded', len(sats), 'satellites')
+    return sats
     
 def main():
     
@@ -99,23 +112,9 @@ def main():
     planets = load('de421.bsp')
     earth = planets['earth']
     
-    #loading stations only to limit computation
-    
-    max_days = 7.0         # download again once 7 days old
-    name = 'stations.csv'  # custom filename, not 'gp.php'
-    
-    base = 'https://celestrak.org/NORAD/elements/gp.php'
-    url = base + '?GROUP=stations&FORMAT=csv'
-    
-    if not load.exists(name) or load.days_old(name) >= max_days:
-        load.download(url, filename=name)
-    
-    with load.open('stations.csv', mode='r') as f:
-        data = list(csv.DictReader(f))
-    
     ts = load.timescale()
-    sats = [EarthSatellite.from_omm(ts, fields) for fields in data]
-    print('Loaded', len(sats), 'satellites')
+    
+    sats = selectData("starlink")
     
     warkworth = wgs84.latlon(-36, +174, elevation_m=43)
     ssb_warkworth = earth + warkworth
@@ -125,7 +124,7 @@ def main():
     vela = Star(ra_hours=(8,35,20.65525), dec_degrees=(-45, 10, 35.1545))
     
     #checkOverhead() 
-    timeRange(vela, 2025,1,1,8,0,0, 2025,1,1,8,1,0)
+    timeRange(vela, ts.utc(2025,1,1,8,0,0), ts.utc(2025,1,1,8,1,0))
 
 main()
 
