@@ -28,7 +28,7 @@ def timeRange(target, t_init, t_end):
         print(f"Az: {az.degrees:.2f}°") 
 
         # Check for satellite intersections
-        sat_intersects = checkSatelliteIntersect(t_temp, target, apparent)
+        sat_intersects = checkSatelliteIntersect(t_temp, apparent)
         for sat, topocentric, difference_angle in sat_intersects:
             sat_alt, sat_az, _ = topocentric.altaz()
             
@@ -49,7 +49,7 @@ def timeRange(target, t_init, t_end):
     plot_3d(times, alts, azs, sat_times, sat_alts, sat_azs)
 
 
-def checkSatelliteIntersect(t, target, targPos):
+def checkSatelliteIntersect(t, targPos):
     intersecting_sats = []
     
     for satellite in sats:
