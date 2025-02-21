@@ -1,5 +1,5 @@
 import csv
-from skyfield.api import EarthSatellite, load, wgs84, Star, N,W
+from skyfield.api import EarthSatellite, load, wgs84, Star
 import numpy as np
 
 def checkOverhead():
@@ -37,27 +37,16 @@ def checkOverhead():
 #crossreference with the satellites that rise or fall and their position at 
 #each time, we can determine interference. 
 
-def checkTargetPosition(t):
-
-    #example target for observation: barnards star:
-    barnard = Star(ra_hours=(17, 57, 48.49803), dec_degrees=(4, 41, 36.2072))
+def checkTargetPosition(t, target):
     
-    astrometric = ssb_warkworth.at(t).observe(barnard)
+    astrometric = ssb_warkworth.at(t).observe(target)
     apparent = astrometric.apparent()
     
-    # #Alt/Az apparent 
-    # alt_target, az_target, distance_target = apparent.altaz()
-    # print("At ", t.utc_strftime())
-    # print("Altitude = ", alt_target.dstr())
-    # print("Azimuth = ", az_target.dstr())
     return apparent
 
-def displayTargetPosition(t):
-
-    #example target for observation: barnards star:
-    barnard = Star(ra_hours=(17, 57, 48.49803), dec_degrees=(4, 41, 36.2072))
+def displayTargetPosition(t, target):
     
-    astrometric = ssb_warkworth.at(t).observe(barnard)
+    astrometric = ssb_warkworth.at(t).observe(target)
     apparent = astrometric.apparent()
     
     #Alt/Az apparent 
@@ -66,7 +55,7 @@ def displayTargetPosition(t):
     print("Altitude = ", alt_target.dstr())
     print("Azimuth = ", az_target.dstr())
 
-def timeRange(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
+def timeRange(target, initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond, endyear, endmonth, endday, endhour, endminute, endsecond):
     times=[]
     t_init = ts.utc(initialyear, initialmonth, initialday, initialhour, initialminute, initialsecond)
     t_end = ts.utc(endyear, endmonth, endday, endhour, endminute, endsecond)
@@ -79,19 +68,25 @@ def timeRange(initialyear, initialmonth, initialday, initialhour, initialminute,
     for i in range(steps):
         t_temp = t_temp+one_second
         times.append(t_temp)
-        checkSatelliteIntersect(t_temp)     
+        checkSatelliteIntersect(t_temp, target)
+        displayTargetPosition(t_temp, target)
 
-def checkSatelliteIntersect(t):
+def checkSatelliteIntersect(t, target):
     for satellite in sats:
         difference = satellite - warkworth
         topocentric = difference.at(t)
         alt_sat, az_sat, distance_sat = topocentric.altaz()
-        difference_angle = checkTargetPosition(t).separation_from(topocentric)
+        difference_angle = checkTargetPosition(t, target).separation_from(topocentric)
         threshold_degrees = 5
         if difference_angle.degrees < threshold_degrees:
            print("Satellite {satellite.name} is near the Target")
            print("  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
            print("  - Angular separation: {difference_angle}\n")
+    
+    
+#add function to graph position of target and any satellites that cross -  3d with ra, dec, time/2d antimated over time? 
+#add function to decide which satellite set to use
+
     
 def main():
     
@@ -125,8 +120,12 @@ def main():
     warkworth = wgs84.latlon(-36, +174, elevation_m=43)
     ssb_warkworth = earth + warkworth
     
+    #example target for observation: barnards star:
+    barnard = Star(ra_hours=(17, 57, 48.49803), dec_degrees=(4, 41, 36.2072))
+    vela = Star(ra_hours=(8,35,20.65525), dec_degrees=(-45, 10, 35.1545))
+    
     #checkOverhead() 
-    timeRange(2025,1,1,8,0,0, 2025,1,1,8,1,0)
+    timeRange(vela, 2025,1,1,8,0,0, 2025,1,1,8,1,0)
 
 main()
 
