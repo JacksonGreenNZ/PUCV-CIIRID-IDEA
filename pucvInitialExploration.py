@@ -2,41 +2,6 @@ import csv
 from skyfield.api import EarthSatellite, load, wgs84, Star
 import numpy as np
 
-def checkOverhead():
-    event_names = ['rise above 5°', 'culminate', 'set below 5°']
-    satellites_interfere = [] #array to store any satellites that will be 
-    #overhead during timeframe
-    
-    # Iterate through each satellite and check rise, culmination, and fall
-    for satellite in sats:
-
-        
-        t0 = ts.utc(2025, 1, 1, 8)
-        t1 = ts.utc(2025, 1, 1, 14)
-        
-        t, events = satellite.find_events(warkworth, t0, t1, altitude_degrees=5.0)
-    
-        # If no events (rise or set), skip this satellite
-        if len(events) == 0:
-            continue    
-    
-        #print satellite so we know what info we have
-        satellite_name = satellite.name
-        print(f"Processing satellite: {satellite_name}")
-    
-        satellites_interfere.append(satellite.name)#add to list
-        
-        for ti, event in zip(t, events):
-            name = event_names[event]
-            print(ti.utc_strftime('%Y %b %d %H:%M:%S'), name)
-            
-    print(satellites_interfere)
-
-#The main factor in tracking a distant object is earth rotation, not object 
-#movement, so if we pick a spot and track it throughout time, then
-#crossreference with the satellites that rise or fall and their position at 
-#each time, we can determine interference. 
-
 def checkTargetPosition(t, target):
     
     astrometric = ssb_warkworth.at(t).observe(target)
@@ -114,17 +79,15 @@ def main():
     earth = planets['earth']
     
     ts = load.timescale()
-    
     sats = selectData("starlink")
     
+    #observation location
     warkworth = wgs84.latlon(-36, +174, elevation_m=43)
     ssb_warkworth = earth + warkworth
     
-    #example target for observation: barnards star:
-    barnard = Star(ra_hours=(17, 57, 48.49803), dec_degrees=(4, 41, 36.2072))
+    #target
     vela = Star(ra_hours=(8,35,20.65525), dec_degrees=(-45, 10, 35.1545))
     
-    #checkOverhead() 
     timeRange(vela, ts.utc(2025,1,1,8,0,0), ts.utc(2025,1,1,8,1,0))
 
 main()
