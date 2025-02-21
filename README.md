@@ -30,16 +30,15 @@ Tracks the target over a given time range and logs its position every second. It
 
 ---
 
-### 3. `checkSatelliteIntersect(t, target, targPos)`
+### 3. `checkSatelliteIntersect(t, targPos)`
 Determines whether any satellites are near the target at a given time.
 
 #### Inputs:
 - `t`: Current time
-- `target`: The celestial object
 - `targPos`: Apparent position of the target
 
 #### Returns:
-- A list of satellites that pass within 2 degrees of the target.
+- A list of satellites that pass within 2 degrees of the target at the time checked.
 
 ---
 
