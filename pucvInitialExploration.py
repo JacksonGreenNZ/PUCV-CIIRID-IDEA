@@ -70,16 +70,17 @@ def timeRange(target, t_init, t_end):
         displayTargetPosition(t_temp, target)
 
 def checkSatelliteIntersect(t, target):
+    targPos = checkTargetPosition(t, target)
     for satellite in sats:
         difference = satellite - warkworth
         topocentric = difference.at(t)
         alt_sat, az_sat, distance_sat = topocentric.altaz()
-        difference_angle = checkTargetPosition(t, target).separation_from(topocentric)
+        difference_angle = targPos.separation_from(topocentric)
         threshold_degrees = 2
         if difference_angle.degrees < threshold_degrees:
-           print("Satellite {satellite.name} is near the Target")
-           print("  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
-           print("  - Angular separation: {difference_angle}\n")
+           print(f"Satellite {satellite.name} is near the Target")
+           print(f"  - Satellite Alt/Az: {alt_sat.dstr()}, {az_sat.dstr()}")
+           print(f"  - Angular separation: {difference_angle}\n")
     
     
 #add function to graph position of target and any satellites that cross -  3d with ra, dec, time/2d antimated over time? 
