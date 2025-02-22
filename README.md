@@ -1,7 +1,7 @@
 # Satellite Interference Tracking System
 
 ## Abstract
-This document describes a computational method for tracking satellite movement relative to a target celestial object from a fixed terrestrial observation point. The system determines instances where satellites intersect the target’s line of sight. It employs precomputed positional data for efficiency and generates visual and tabular representations of potential interferences.
+This document describes a computational method for tracking satellite movement relative to a target celestial object from a fixed terrestrial observation point. The system determines instances where satellites may interfere with radio observation and generates visual and tabular representations of potential interferences.
 
 ## System Description
 ### Observation Parameters
