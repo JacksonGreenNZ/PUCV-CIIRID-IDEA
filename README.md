@@ -1,78 +1,56 @@
-## Overview
-This Python script tracks the apparent position of an astronomical target as seen from a ground station and checks for potential satellite intersections. It then visualises the results in a 3D plot. The script uses the Skyfield library for precise celestial mechanics calculations.
+# Satellite Interference Tracking System
 
-## Functions
+## Abstract
+This document describes a computational method for tracking satellite movement relative to a target celestial object from a fixed terrestrial observation point. The system determines instances where satellites intersect the target’s line of sight. It employs precomputed positional data for efficiency and generates visual and tabular representations of potential interferences.
 
-### 1. `checkTargetPosition(t, target)`
-Determines the apparent position of a celestial target from the observing station at a given time `t`.
+## System Description
+### Observation Parameters
+- **Location** (e.g. Warkworth, New Zealand
+- **Target** (e.g., Vela quasar)
+- **Observation Window**
 
-#### Inputs:
-- `t`: A Skyfield time object
-- `target`: A Skyfield Star object
+### Data Sources
+- **Planetary Ephemeris:** `de421.bsp`
+- **Satellite Orbital Elements:** Retrieved from CelesTrak
+- **Terrestrial Reference:** WGS84 geodetic coordinates, user defined
 
-#### Returns:
-- The apparent position of the target in the sky (altitude, azimuth, etc.).
+### Computational Approach
+1. **Data Acquisition**
+   - Planetary and satellite data are loaded.
+   - Observation site parameters are established.
+   
+2. **Precomputation of Positions**
+   - Vectorised time computations.
+   - Satellite and target celestial object positions are precomputed to optimise processing.
+   
+3. **Satellite Intersection Detection**
+   - Satellite positions are compared to the target’s location at each time step.
+   - An intersection is registered if a satellite is within **1.5 degrees** of the target.
+   
+4. **Output Generation**
+   - Intersection events are logged in a CSV file with the following parameters:
+     - Timestamp
+     - Object Name (Target/Satellite)
+     - Altitude (degrees)
+     - Azimuth (degrees)
+     - Angular Separation (if applicable)
+   - A 3D visualisation of satellite trajectories and the target’s motion is generated.
 
----
+## Output Formats
+### CSV Report
+- Naming convention: `sat_intersect_YYYY-MM-DD_HH-MM-SS.csv`
+- Provides tabular data on satellite interference events.
 
-### 2. `timeRange(target, t_init, t_end)`
-Tracks the target over a given time range and logs its position every second. It also checks for satellite intersections.
+### Visualisation
+- A 3D plot representing:
+  - Target object trajectory
+  - Satellite positions and potential interferences
+  
+## System Customisation
+- **Target Selection:** Modify the `Star()` function parameters.
+- **Observation Duration:** Adjust `startTime` and `endTime`.
+- **Satellite Database:** Change dataset selection in `selectData("starlink")` (e.g., "stations").
 
-#### Inputs:
-- `target`: The celestial object being observed
-- `t_init`: Start time (Skyfield time object)
-- `t_end`: End time (Skyfield time object)
-
-#### Outputs:
-- Prints the altitude and azimuth of the target for each second.
-- Checks for satellites within a 2-degree range.
-- Calls `plot_3d()` to visualise data.
-
----
-
-### 3. `checkSatelliteIntersect(t, targPos)`
-Determines whether any satellites are near the target at a given time.
-
-#### Inputs:
-- `t`: Current time
-- `targPos`: Apparent position of the target
-
-#### Returns:
-- A list of satellites that pass within 2 degrees of the target at the time checked.
-
----
-
-### 4. `plot_3d(times, alts, azs, sat_times, sat_alts, sat_azs)`
-Creates a 3D plot of the target’s trajectory and any intersecting satellites.
-
-#### Inputs:
-- Lists of timestamps, altitudes, and azimuths for the target and satellites
-
-#### Output:
-- A 3D visualisation using `matplotlib`.
-
----
-
-### 5. `selectData(type)`
-Downloads and loads satellite data from Celestrak.
-
-#### Inputs:
-- `type`: The type of satellites (e.g., "starlink" or "stations")
-
-#### Outputs:
-- Returns a list of `EarthSatellite` objects.
-- Saves the latest satellite data as a CSV file, refreshing every 7 days.
-
----
-
-### 6. `main()`
-- Loads planetary and satellite data.
-- Defines the observing location.
-- Defines the target.
-- Calls `timeRange()` to track the target and execute all functions listed above.
-
-## Notes
-- The script is currently configured to observe the Vela quasar from Warkworth, NZ (as of 21/02/25).
-- The 2-degree threshold for satellite detection can be adjusted in `checkSatelliteIntersect()`.
-- The script prints relevant information to the console and visualises it in a 3D plot.
+## Applications
+This system is applicable for astronomical observation planning and astrophotography scheduling in optical and radio astronomy.
 
