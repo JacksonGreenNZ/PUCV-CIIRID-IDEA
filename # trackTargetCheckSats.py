@@ -145,7 +145,7 @@ def main():
     ts = load.timescale()
 
     #load satellite data, defined observe position (local and solar system baryonic) 
-    sats = selectData("starlink")
+    sats = selectData("active")
     warkworth = wgs84.latlon(-36, +174, elevation_m=43)
     ssb_warkworth = earth + warkworth
 
