@@ -5,7 +5,7 @@ This document describes a computational method for tracking satellite movement r
 
 ## System Description
 ### Observation Parameters
-- **Location** (e.g. Warkworth, New Zealand
+- **Location** (e.g. Warkworth, New Zealand)
 - **Target** (e.g., Vela quasar)
 - **Observation Window**
 
