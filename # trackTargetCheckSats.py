@@ -6,8 +6,6 @@ from datetime import datetime
 import pytz
 from tqdm import tqdm
 
-# Precomupte target and sat positions with Time object array instead of individual time objects (3.3x speed improvement)
-
 def precomputeTargetPositions(target, time_steps): 
     return ssb_warkworth.at(time_steps).observe(target).apparent()
 
@@ -20,7 +18,7 @@ def checkSatelliteIntersect(t_index, targPos, sat_positions):
     for sat, topocentric in sat_positions.items():
         difference_angle = targPos.separation_from(topocentric[t_index])
         
-        if difference_angle.degrees < 1.5:
+        if difference_angle.degrees < 0.7: #adjusted to match the rayleigh criterion
             intersecting_sats.append((sat, topocentric[t_index], difference_angle))
     
     return intersecting_sats
@@ -150,9 +148,9 @@ def main():
     ssb_warkworth = earth + warkworth
 
     #define target and time range
-    vela = Star(ra_hours=(8,35,20.65525), dec_degrees=(-45, 10, 35.1545))
-    startTime = ts.utc(2025,1,1,8,0,0)
-    endTime = ts.utc(2025,1,1,8,5,0)
+    vela = Star(ra_hours=(8,35,20.65525), dec_degrees=(-45, 10, 35.1545)) #From documentation: The position in the sky of a star or other fixed object. Each `Star` object specifies the position of a distant object. 
+    startTime = ts.utc(2025,1,1,8,0)
+    endTime = ts.utc(2025,1,1,8,30)    
     
     #run interference checker
     satTrackPlot(vela, startTime, endTime)
