@@ -175,7 +175,7 @@ def get_user_inputs():
     # Get observer location
     location_choice = input("Enter observer location (warkworth/custom): ").strip().lower()
     if location_choice == "warkworth":
-        observer = wgs84.latlon(-36, +174, elevation_m=43)
+        observer = wgs84.latlon(-36, +174, elevation_m=128)
     else:
         lat = float(input("Enter latitude: "))
         lon = float(input("Enter longitude: "))
