@@ -184,6 +184,10 @@ def get_user_inputs():
     
     return year, month, day, hour, minute, duration, target, observer   
 
+# add to get user input 1.22*(wavelength/lens diameter) for the interference angle.  
+# for optical telescopes 350-700 nanometre wavelength, for radio telescopes it's 0.001m to 10m wavelength. 
+# option for selecting type?
+
 def main():
     # Get user inputs
     year, month, day, hour, minute, duration, target, observer = get_user_inputs()
