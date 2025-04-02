@@ -25,7 +25,7 @@ This document describes a computational method for tracking satellite movement r
    
 3. **Satellite Intersection Detection**
    - Satellite positions are compared to the target’s location at each time step.
-   - An intersection is registered if a satellite is within **1.5 degrees** of the target.
+   - An intersection is registered if a satellite is within **0.7 degrees** of the target.
    
 4. **Output Generation**
    - Intersection events are logged in a CSV file with the following parameters:
@@ -47,9 +47,7 @@ This document describes a computational method for tracking satellite movement r
   - Satellite positions and potential interferences
   
 ## System Customisation
-- **Target Selection:** Modify the `Star()` function parameters.
-- **Observation Duration:** Adjust `startTime` and `endTime`.
-- **Satellite Database:** Change dataset selection in `selectData("starlink")` (e.g., "stations").
+- **Satellite Database:** Change dataset selection in `selectData("x")` (e.g., "stations", "starlink", "active" etc).
 
 ## Applications
 This system is applicable for astronomical observation planning and astrophotography scheduling in optical and radio astronomy.
