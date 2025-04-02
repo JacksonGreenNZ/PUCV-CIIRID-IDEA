@@ -3,7 +3,6 @@ from skyfield.api import EarthSatellite, load, wgs84, Star
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
-import pytz
 from tqdm import tqdm
 
 #load earth data, timescale, satellite 
@@ -49,7 +48,7 @@ def checkSatelliteIntersect(t_index, targPos, sat_positions):
     for sat, topocentric in sat_positions.items():
         difference_angle = targPos.separation_from(topocentric[t_index])
         
-        if difference_angle.degrees < 1.4: #adjusted to match the rayleigh criterion, 2 sigma
+        if difference_angle.degrees < 0.7: #adjusted to match the rayleigh criterion, 2 sigma
             intersecting_sats.append((sat, topocentric[t_index], difference_angle))
     
     return intersecting_sats
@@ -106,8 +105,8 @@ def satTrackPlot(target, observer, t_init, t_end, sats):
             pbar.update(1)  # Update progress bar            
 
     # Save data to CSV file
-    nz_time = datetime.now(pytz.timezone("Pacific/Auckland"))
-    timestamp = nz_time.strftime("%Y-%m-%d_%H-%M-%S")
+    local_time = datetime.now()
+    timestamp = local_time.strftime("%Y-%m-%d_%H-%M-%S")
     filename = f"sat_intersect_{timestamp}.csv"
 
     with open(filename, mode='w', newline='') as f:
