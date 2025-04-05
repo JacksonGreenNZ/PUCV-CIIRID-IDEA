@@ -35,6 +35,7 @@ This document describes a computational method for tracking satellite movement r
      - Azimuth (degrees)
      - Angular Separation (if applicable)
    - A 3D visualisation of satellite trajectories and the target’s motion is generated.
+   - A 2D animation of satellites and the target’s motion is generated.
 
 ## Output Formats
 ### CSV Report
@@ -42,9 +43,9 @@ This document describes a computational method for tracking satellite movement r
 - Provides tabular data on satellite interference events.
 
 ### Visualisation
-- A 3D plot representing:
+- Plots represent:
   - Target object trajectory
-  - Satellite positions and potential interferences
+  - Satellite positions
   
 ## System Customisation
 - **Satellite Database:** Change dataset selection in `selectData("x")` (e.g., "stations", "starlink", "active" etc).
