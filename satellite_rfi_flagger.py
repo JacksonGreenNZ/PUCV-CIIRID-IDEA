@@ -20,7 +20,7 @@ class Satellite:
         self.alts = []  
         self.azs = []  
 
-    def addPosition(self, time, alt, az):
+    def add_position(self, time, alt, az):
         self.times.append(time)
         self.alts.append(alt)
         self.azs.append(az)
@@ -118,7 +118,7 @@ def sat_track_plot(target, observer, t_init, t_end, sats):
                     sat_obj = Satellite(name=sat.name)
                     satellites.append(sat_obj)
                 
-                sat_obj.addPosition(t_temp.utc_datetime(), sat_alt.degrees, sat_az.degrees)
+                sat_obj.add_position(t_temp.utc_datetime(), sat_alt.degrees, sat_az.degrees)
 
                 #add satellite data for CSV output
                 output_data.append([
