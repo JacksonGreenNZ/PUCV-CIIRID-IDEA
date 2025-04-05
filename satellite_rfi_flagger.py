@@ -164,7 +164,7 @@ def create_visualisation(times, alts, azs, satellites):
     ax1.set_ylabel("Azimuth (degrees)")
     ax1.set_zlabel("Altitude (degrees)")
     ax1.grid(True, linestyle="--", alpha=0.6)
-    ax1.legend(loc='bottom left', bbox_to_anchor=(1.05, 1))
+    ax1.legend(loc='lower left', bbox_to_anchor=(1.05, 1))
     fig1.tight_layout()
     plt.show()
 
