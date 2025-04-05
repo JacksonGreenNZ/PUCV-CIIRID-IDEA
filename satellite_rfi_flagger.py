@@ -69,7 +69,7 @@ def check_satellite_intersect(t_index, targPos, sat_positions):
     for sat, topocentric in sat_positions.items():
         difference_angle = targPos.separation_from(topocentric[t_index])
         
-        if difference_angle.degrees < 0.7: #adjusted to match the rayleigh criterion, 2 sigma
+        if difference_angle.degrees < 1.4: #adjusted to match the rayleigh criterion, 2 sigma
             intersecting_sats.append((sat, topocentric[t_index], difference_angle))
     
     return intersecting_sats
@@ -212,8 +212,8 @@ def create_visualisation(times, alts, azs, satellites):
     ax2.set_title('Target Position (Altitude vs Azimuth)', fontsize=16)
     ax2.set_xlabel('Azimuth (degrees)', fontsize=12)
     ax2.set_ylabel('Altitude (degrees)', fontsize=12)
-    ax2.set_xlim(min(azs)-0.75, max(azs)+0.75)#zoom in on the target +0.75 for any sats. adjust later when user can determine angular resolution
-    ax2.set_ylim(min(alts)-0.75, max(alts)+0.75)
+    ax2.set_xlim(min(azs)-1.45, max(azs)+1.45)#zoom in on the target 1.45 for any sats. adjust later when user can determine angular resolution
+    ax2.set_ylim(min(alts)-1.45, max(alts)+1.45)
     ax2.grid(True)
     ax2.legend()
     
