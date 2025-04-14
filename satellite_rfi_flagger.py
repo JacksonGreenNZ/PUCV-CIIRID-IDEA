@@ -25,10 +25,12 @@ class Satellite:
         self.alts.append(alt)
         self.azs.append(az)
 
-#load earth data from skyfield, timescale 
+#load earth data from skyfield, timescale, beamwidth 
 planets = load('de421.bsp')
 earth = planets['earth']
 ts = load.timescale()
+
+beamwidth = 1.4
 
 #ensure variables can be imported  (for later gui implementation)
 __all__ = [
@@ -69,7 +71,8 @@ def check_satellite_intersect(t_index, targPos, sat_positions):
     for sat, topocentric in sat_positions.items():
         difference_angle = targPos.separation_from(topocentric[t_index])
         
-        if difference_angle.degrees < 1.4: #adjusted to match the rayleigh criterion, 2 sigma
+
+        if difference_angle.degrees < beamwidth: #adjusted to match the rayleigh criterion, 2 sigma
             intersecting_sats.append((sat, topocentric[t_index], difference_angle))
     
     return intersecting_sats
@@ -164,7 +167,7 @@ def create_visualisation(times, alts, azs, satellites):
     ax1.set_ylabel("Azimuth (degrees)")
     ax1.set_zlabel("Altitude (degrees)")
     ax1.grid(True, linestyle="--", alpha=0.6)
-    ax1.legend(loc='lower left', bbox_to_anchor=(1.05, 1))
+    ax1.legend()
     fig1.tight_layout()
     plt.show()
 
@@ -212,8 +215,8 @@ def create_visualisation(times, alts, azs, satellites):
     ax2.set_title('Target Position (Altitude vs Azimuth)', fontsize=16)
     ax2.set_xlabel('Azimuth (degrees)', fontsize=12)
     ax2.set_ylabel('Altitude (degrees)', fontsize=12)
-    ax2.set_xlim(min(azs)-1.45, max(azs)+1.45)#zoom in on the target 1.45 for any sats. adjust later when user can determine angular resolution
-    ax2.set_ylim(min(alts)-1.45, max(alts)+1.45)
+    ax2.set_xlim(min(azs)-(beamwidth*1.05), max(azs)+(beamwidth*1.05))#zoom in on the target based on beamwidth
+    ax2.set_ylim(min(alts)-(beamwidth*1.05), max(alts)+(beamwidth*1.05))
     ax2.grid(True)
     ax2.legend()
     
@@ -255,7 +258,7 @@ def create_visualisation(times, alts, azs, satellites):
                 sat_markers.append(marker)
                 sat_labels.append(label)
         
-        ax2.set_title(f'Sky Position - {time_key}', fontsize=16)
+        ax2.set_title(f'Target Position - {time_key}', fontsize=16)
         
         return [target_point, target_traj_line] + sat_markers + sat_labels
     
@@ -271,10 +274,10 @@ def get_observation_data():
     testing_choice = input("Testing? (y/n): ").strip().lower()
 
     if testing_choice == "y":
-        #sse predefined values for testing (Oct 10 2025 at 10:15 for 5 minutes - lots of satellites intersecting Vela from Warkworth)
-        year, month, day, hour, minute, duration = 2025, 10, 10, 10, 15, 5
+        #sse predefined values for testing
+        year, month, day, hour, minute, duration = 2025, 10, 10, 13, 30, 5
         target = Star(ra_hours=(8, 35, 20.65525), dec_degrees=(-45, 10, 35.1545))  #Vela
-        observer = wgs84.latlon(-36, +174, elevation_m=128)  #Warkworth observer
+        observer = wgs84.latlon(-36, +174, elevation_m=64)  #Warkworth observer
     else:
         #normal input flow for non-testing
         year = int(input("Enter year (YYYY): "))
