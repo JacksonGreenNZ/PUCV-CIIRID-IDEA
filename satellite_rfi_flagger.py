@@ -25,12 +25,10 @@ class Satellite:
         self.alts.append(alt)
         self.azs.append(az)
 
-#load earth data from skyfield, timescale, beamwidth 
+#load earth data from skyfield, timescale 
 planets = load('de421.bsp')
 earth = planets['earth']
 ts = load.timescale()
-
-beamwidth = 1.4
 
 #ensure variables can be imported  (for later gui implementation)
 __all__ = [
@@ -59,7 +57,7 @@ def select_data(type):
 sats = select_data("active")
 
 def precompute_target_positions(target, time_steps, observerSSB): 
-    return observerSSB.at(time_steps).observe(target).apparent()#returns apparent position - check if this is correct or not. Radio interference isn't as significant as optical.
+    return observerSSB.at(time_steps).observe(target).apparent()#returns apparent position - evaluate if this works for radio as optical
 
 def precompute_satellite_positions(sats, time_steps, observer):
     return {sat: (sat - observer).at(time_steps) for sat in sats}
@@ -71,8 +69,7 @@ def check_satellite_intersect(t_index, targPos, sat_positions):
     for sat, topocentric in sat_positions.items():
         difference_angle = targPos.separation_from(topocentric[t_index])
         
-
-        if difference_angle.degrees < beamwidth: #adjusted to match the rayleigh criterion, 2 sigma
+        if difference_angle.degrees < 1.4: #adjusted to match the rayleigh criterion, 2 sigma
             intersecting_sats.append((sat, topocentric[t_index], difference_angle))
     
     return intersecting_sats
@@ -84,7 +81,6 @@ def sat_track_plot(target, observer, t_init, t_end, sats):
 
     #List for CSV export
     output_data = []
-
     one_second = np.float64(0.00001157407) #skyfield time maths sets 1 day = 1
     time_steps = ts.tt_jd(np.arange(t_init.tt, t_end.tt, one_second))  #vectorised time steps to save compute time
     total_steps = len(time_steps)
@@ -167,7 +163,7 @@ def create_visualisation(times, alts, azs, satellites):
     ax1.set_ylabel("Azimuth (degrees)")
     ax1.set_zlabel("Altitude (degrees)")
     ax1.grid(True, linestyle="--", alpha=0.6)
-    ax1.legend()
+    ax1.legend(loc='lower left', bbox_to_anchor=(1.05, 1))
     fig1.tight_layout()
     plt.show()
 
@@ -215,8 +211,8 @@ def create_visualisation(times, alts, azs, satellites):
     ax2.set_title('Target Position (Altitude vs Azimuth)', fontsize=16)
     ax2.set_xlabel('Azimuth (degrees)', fontsize=12)
     ax2.set_ylabel('Altitude (degrees)', fontsize=12)
-    ax2.set_xlim(min(azs)-(beamwidth*1.05), max(azs)+(beamwidth*1.05))#zoom in on the target based on beamwidth
-    ax2.set_ylim(min(alts)-(beamwidth*1.05), max(alts)+(beamwidth*1.05))
+    ax2.set_xlim(min(azs)-1.45, max(azs)+1.45)#zoom in on the target 1.45 for any sats. adjust later when user can determine angular resolution
+    ax2.set_ylim(min(alts)-1.45, max(alts)+1.45)
     ax2.grid(True)
     ax2.legend()
     
@@ -258,7 +254,7 @@ def create_visualisation(times, alts, azs, satellites):
                 sat_markers.append(marker)
                 sat_labels.append(label)
         
-        ax2.set_title(f'Target Position - {time_key}', fontsize=16)
+        ax2.set_title(f'Sky Position - {time_key}', fontsize=16)
         
         return [target_point, target_traj_line] + sat_markers + sat_labels
     
@@ -274,17 +270,18 @@ def get_observation_data():
     testing_choice = input("Testing? (y/n): ").strip().lower()
 
     if testing_choice == "y":
-        #sse predefined values for testing
-        year, month, day, hour, minute, duration = 2025, 10, 10, 13, 30, 5
+        #sse predefined values for testing (Oct 10 2025 at 10:15 for 5 minutes - lots of satellites intersecting Vela from Warkworth)
+        year, month, day, hour, minute, duration = 2025, 10, 10, 10, 15, 5
         target = Star(ra_hours=(8, 35, 20.65525), dec_degrees=(-45, 10, 35.1545))  #Vela
-        observer = wgs84.latlon(-36, +174, elevation_m=64)  #Warkworth observer
+        observer = wgs84.latlon(-36, +174, elevation_m=128)  #Warkworth observer
     else:
         #normal input flow for non-testing
+        print('Enter observation data in LST.')
         year = int(input("Enter year (YYYY): "))
         month = int(input("Enter month (MM): "))
         day = int(input("Enter day (DD): "))
-        hour = int(input("Enter hour (HH, UTC): "))
-        minute = int(input("Enter minute (MM, UTC): "))
+        hour = int(input("Enter hour (HH): "))
+        minute = int(input("Enter minute (MM): "))
         duration = int(input("Enter observation duration in minutes: "))
 
         target_choice = input("Enter target (vela/custom): ").strip().lower()
