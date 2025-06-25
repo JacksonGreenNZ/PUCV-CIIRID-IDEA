@@ -1,13 +1,10 @@
 # Satellite Interference Tracking System
 
-## Abstract
-This document describes a computational method for tracking satellite movement relative to a target celestial object from a fixed terrestrial observation point. The system determines instances where satellites may interfere with radio observation and generates visual and tabular representations of potential interferences.
-
-## System Description
 ### Observation Parameters
 - **Location** (e.g. Warkworth, New Zealand)
 - **Target** (e.g., Vela quasar)
-- **Observation Window**
+- **Observation Start Time**
+- **Observation Length**
 
 ### Data Sources
 - **Planetary Ephemeris:** `de421.bsp`
@@ -25,7 +22,7 @@ This document describes a computational method for tracking satellite movement r
    
 3. **Satellite Intersection Detection**
    - Satellite positions are compared to the target’s location at each time step.
-   - An intersection is registered if a satellite is within **0.7 degrees** of the target.
+   - An intersection is registered if a satellite is within 1.4 degrees of the target.
    
 4. **Output Generation**
    - Intersection events are logged in a CSV file with the following parameters:
