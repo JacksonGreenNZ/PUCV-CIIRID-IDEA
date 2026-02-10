@@ -1,0 +1,28 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load CSV
+df = pd.read_csv("sat_intersect_2026-01-18_06-09-49.csv")
+
+df["Time"] = pd.to_datetime(df["Time"], utc=True)
+df = df[df["Object"] != "Target"]
+
+# Count satellites per second
+counts = df.groupby("Time").size()
+
+# Get lowest 20 and highest 20
+lowest_20 = counts.nsmallest(20)
+highest_20 = counts.nlargest(20)
+
+# Combine and sort by time for plotting
+selected = pd.concat([lowest_20, highest_20]).sort_index()
+
+# Plot bar chart
+plt.figure(figsize=(12, 5))
+plt.bar(selected.index.astype(str), selected.values)
+plt.xlabel("Time (UTC)")
+plt.ylabel("Number of satellites")
+plt.title("Lowest and Highest 20 Satellite Counts Per Second")
+plt.xticks(rotation=90)
+plt.tight_layout()
+plt.show()
