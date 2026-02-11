@@ -1,4 +1,4 @@
-#!/root/spaceborne-rfi/PUCV-CIIRID-IDEA/FYP/FYP/venv/bin/python3
+#!/root/spaceborne-rfi/PUCV-CIIRID-IDEA/FYP/venv/bin/python3
 import sys
 from astropy.samp.hub_script import hub_script
 if __name__ == '__main__':
