@@ -12,7 +12,7 @@ config = (
     .set_frequency_range(bandwidth=10, frequency=135)
     # Cygnus A
     .set_observation_target(declination="40d44m", right_ascension="19h59m")
-    .set_satellites(tle_file="satellites.tle")
+    .set_satellites(tle_file="active.tle")
     .build()
 )
 
@@ -26,11 +26,15 @@ interference_events = engine.get_satellites_crossing_main_beam()
 print(f"Found {len(interference_events)} interference events:")
 
 for event in interference_events:
-    start = event.times[0]
-    end = event.times[-1]
+    # Use the first and last positions for start/end times
+    start = event.positions[0].time
+    end   = event.positions[-1].time
     duration = (end - start).total_seconds()
 
     print(f"--- {event.satellite.name} ---")
     print(f"  Window:   {start} -> {end}")
     print(f"  Duration: {duration:.1f} seconds")
-    print(f"  Max Elev: {event.altitude.max():.1f} deg")
+
+    # max altitude
+    altitudes = [p.position.altitude for p in event.positions]
+    print(f"  Max Elev: {max(altitudes):.1f} deg")
