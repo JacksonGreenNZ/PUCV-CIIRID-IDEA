@@ -84,6 +84,18 @@ for event in interference_events:
             "target_az_deg": target_az.degrees,
             "angular_sep_deg": ang_sep_deg
         })
+        
+        #print to console
+        start = event.positions[0].time 
+        end = event.positions[-1].time 
+        duration = (end - start).total_seconds() 
+        print(f"--- {event.satellite.name} ---") 
+        print(f" Window: {start} -> {end}") 
+        print(f" Duration: {duration:.1f} seconds") 
+        altitudes = [p.position.altitude for p in event.positions] 
+        print(f" Max Elev: {max(altitudes):.1f} deg")
+        print(f" Target Pos at first satellite time: Alt={target_alt.degrees:.2f}°, Az={target_az.degrees:.2f}°")
+        
 
 # Write CSV
 with open(filename, "w", newline="") as f:
