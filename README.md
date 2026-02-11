@@ -1,3 +1,4 @@
+(Currently undergoing refactor: legacy readme)
 # Satellite Interference Tracking System
 
 ### Observation Parameters
