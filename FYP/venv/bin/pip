@@ -1,4 +1,4 @@
-#!/root/spaceborne-rfi/PUCV-CIIRID-IDEA/FYP/FYP/venv/bin/python3
+#!/root/spaceborne-rfi/PUCV-CIIRID-IDEA/FYP/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

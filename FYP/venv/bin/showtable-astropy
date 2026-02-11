@@ -1,4 +1,4 @@
-#!/root/spaceborne-rfi/PUCV-CIIRID-IDEA/FYP/FYP/venv/bin/python3
+#!/root/spaceborne-rfi/PUCV-CIIRID-IDEA/FYP/venv/bin/python3
 import sys
 from astropy.table.scripts.showtable import main
 if __name__ == '__main__':
