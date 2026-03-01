@@ -17,10 +17,10 @@ DEC_DEGREES = 40 + 44/60
 
 #window
 TIME_BEGIN = "2026-01-13T19:00:00"
-TIME_END   = "2026-01-13T19:05:00"
+TIME_END   = "2026-01-13T21:00:00"
 
 #interference threshold
-GAIN_CUTOFF_PERCENT = 2
+GAIN_CUTOFF_PERCENT = 3
 
 #TLE catalogue
 DATA_TYPE = "active"
