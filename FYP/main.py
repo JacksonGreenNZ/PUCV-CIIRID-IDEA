@@ -5,6 +5,7 @@ from models.beam_model import BeamModel
 from core.observer import Observer
 from core.checker import InterferenceChecker
 from core.sopp_runner import SOPPRunner
+from visualisation.sky_plot import SkyPlot
 
 def main():
     #initialise core components
@@ -40,6 +41,12 @@ def main():
         writer.writerows(results)
 
     print(f"Wrote {len(results)} entries to {csv_filename}")
+    
+    #render and save animation
+    plot_filename = output_dir / f"sky_plot_{timestamp}.mp4"
+    plot = SkyPlot(beam_model, observer, results)
+    plot.animate(save_path=str(plot_filename))
+    
 
 if __name__ == "__main__":
     main()
