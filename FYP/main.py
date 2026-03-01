@@ -6,6 +6,8 @@ from core.observer import Observer
 from core.checker import InterferenceChecker
 from core.sopp_runner import SOPPRunner
 from visualisation.sky_plot import SkyPlot
+from core.window_analyser import WindowAnalyser
+from config import TIME_BEGIN, TIME_END, GAP_TOLERANCE_SECONDS
 
 def main():
     #initialise core components
@@ -23,6 +25,9 @@ def main():
     checker = InterferenceChecker(beam_model, observer)
     results = checker.check(interference_events)
     print(f"Airy check flagged {len(results)} position points")
+
+    analyser = WindowAnalyser(results, TIME_BEGIN, TIME_END)
+    print(analyser.summary(gap_tolerance_seconds=GAP_TOLERANCE_SECONDS))
 
     #write CSV
     output_dir = Path("outputs")
