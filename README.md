@@ -9,6 +9,7 @@
 - **Window Gap Tolerance**
 - **Gain Cutoff Percentage**
 - **Satellite Catalogue**
+
 Set in config.py file.
 
 ### Data Sources
