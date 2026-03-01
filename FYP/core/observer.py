@@ -39,6 +39,20 @@ class Observer:
 
         self._target_alts = alt.degrees
         self._target_azs  = az.degrees
+        
+    #public properties for visualisation 
+    @property
+    def target_alts(self):
+        """Full precomputed target altitude array in degrees."""
+        return self._target_alts
+    @property
+    def target_azs(self):
+        """Full precomputed target azimuth array in degrees."""
+        return self._target_azs
+    @property
+    def time_array(self):
+        """Full precomputed time array as skyfield time object."""
+        return self._time_array
 
     def get_target_position(self, sat_time):
         """
