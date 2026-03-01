@@ -26,8 +26,10 @@ class SkyPlot:
         """
         self.by_time = defaultdict(list)
         for row in self.results:
-            self.by_time[row["time_utc"]].append(row)
-        self.sorted_times = sorted(self.by_time.keys())
+            # normalise +00:00 to Z to match skyfield utc_iso() format
+            key = row["time_utc"].replace('+00:00', 'Z')
+            self.by_time[key].append(row)
+        self.sorted_times = [t.utc_iso() for t in self.observer.time_array]
 
     def _prepare_target_track(self):
         """
@@ -36,8 +38,8 @@ class SkyPlot:
         """
         self.full_target_alts = self.observer.target_alts
         self.full_target_azs  = self.observer.target_azs
-        #zenith angle for polar plot: 0 at zenith, 90 at horizon
-        self.full_target_r    = 90 - self.full_target_alts
+        #altitude for polar plot: 90 at zenith, 0 at horizon
+        self.full_target_r    = self.full_target_alts
         self.full_target_theta = np.radians(self.full_target_azs)
 
     def _to_polar_relative(self, sat_az, sat_alt, target_az, target_alt):
@@ -48,8 +50,7 @@ class SkyPlot:
         theta = np.radians(sat_az) - np.radians(target_az)
         alt1, az1, alt2, az2 = map(np.radians, [target_alt, target_az, sat_alt, sat_az])
         d_az = az2 - az1
-        cos_sep = (np.sin(alt1) * np.sin(alt2) +
-                   np.cos(alt1) * np.cos(alt2) * np.cos(d_az))
+        cos_sep = (np.sin(alt1) * np.sin(alt2) + np.cos(alt1) * np.cos(alt2) * np.cos(d_az))
         r = np.degrees(np.arccos(np.clip(cos_sep, -1, 1)))
         return theta, r
 
@@ -67,14 +68,14 @@ class SkyPlot:
         ax_sky.set_facecolor('#1a1a2e')
         ax_sky.set_theta_zero_location('N')
         ax_sky.set_theta_direction(-1)
-        ax_sky.set_rlim(0, 90)
+        ax_sky.set_rlim(90, 0)
         ax_sky.set_rlabel_position(135)
         ax_sky.set_title("Full Sky View", pad=20, color='white')
         ax_sky.tick_params(colors='white')
 
         # full target track as faint trail
         ax_sky.plot(self.full_target_theta, self.full_target_r,
-                    color='green', alpha=0.2, linewidth=1, label='Target track')
+                    color='white', alpha=0.2, linewidth=1, label='Target track')
 
         # current target position marker — updated per frame
         target_marker_sky, = ax_sky.plot([], [], 'g*', markersize=10, label='Target')
@@ -151,6 +152,16 @@ class SkyPlot:
                 [self.full_target_theta[idx]],
                 [self.full_target_r[idx]]
             )
+            
+            ann = ax_rel.annotate(
+                f'Alt {self.full_target_alts[idx]:.1f}°  Az {self.full_target_azs[idx]:.1f}°',
+                xy=(0, 0),
+                xytext=(5, 5),
+                textcoords='offset points',
+                fontsize=7,
+                color='lightgreen'
+            )
+            annotations.append(ann)
 
             #satellite positions
             thetas_rel, rs_rel, gains = [], [], []
@@ -179,7 +190,7 @@ class SkyPlot:
 
                 #absolute sky plot
                 thetas_sky.append(np.radians(row["sat_az_deg"]))
-                rs_sky.append(90 - row["sat_alt_deg"])
+                rs_sky.append(row["sat_alt_deg"])
 
             #update relative scatter
             if thetas_rel:

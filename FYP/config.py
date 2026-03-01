@@ -20,10 +20,10 @@ TIME_BEGIN = "2026-01-13T19:00:00"
 TIME_END   = "2026-01-13T19:05:00"
 
 #interference threshold
-GAIN_CUTOFF_PERCENT = 1
+GAIN_CUTOFF_PERCENT = 2
 
 #TLE catalogue
-TLE_FILE = "data/active.tle"
+DATA_TYPE = "active"
 
 #runtime settings
 CONCURRENCY_LEVEL = os.cpu_count()
