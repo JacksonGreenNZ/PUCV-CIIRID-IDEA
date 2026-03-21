@@ -48,10 +48,14 @@ def main():
     print(f"Wrote {len(results)} entries to {csv_filename}")
     
     #render and save animation
-    plot_filename = output_dir / f"sky_plot_{timestamp}.mp4"
-    plot = SkyPlot(beam_model, observer, results)
-    plot.animate(save_path=str(plot_filename))
-    
+    save_animation = input("Would you like to save the animation? (y/n): ").strip().lower()
+    if save_animation == "y":
+        print("Saving video. Warning - may take some time.")
+        plot_filename = output_dir / f"sky_plot_{timestamp}.mp4"
+        plot = SkyPlot(beam_model, observer, results)
+        plot.animate(save_path=str(plot_filename))
+    else:
+        print("Analysis Complete.")
 
 if __name__ == "__main__":
     main()

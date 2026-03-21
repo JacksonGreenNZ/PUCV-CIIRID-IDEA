@@ -30,7 +30,7 @@ class SOPPRunner:
         if not os.path.exists(filename) or load.days_old(filename) >= max_days:
             print(f"Downloading TLEs for {group}...")
             load.download(url, filename=filename)
-
+        print("Data Located.")
         return filename
 
     def _build_config(self):
