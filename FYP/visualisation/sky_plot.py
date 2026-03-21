@@ -5,6 +5,8 @@ from collections import defaultdict
 from models.beam_model import BeamModel
 from core.observer import Observer
 from config import GAIN_CUTOFF_PERCENT
+import logging
+log = logging.getLogger(__name__)
 
 class SkyPlot:
     """
@@ -223,6 +225,6 @@ class SkyPlot:
 
         if save_path:
             anim.save(save_path, writer='ffmpeg', fps=10, dpi=150)
-            print(f"Animation saved to {save_path}")
+            log.info(f"Animation saved to {save_path}")
         else:
             plt.show()

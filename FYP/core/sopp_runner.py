@@ -8,6 +8,8 @@ from config import (
     FREQUENCY_HZ,
     CONCURRENCY_LEVEL, DATA_TYPE
 )
+import logging
+log = logging.getLogger(__name__)
 
 class SOPPRunner:
     """
@@ -28,9 +30,9 @@ class SOPPRunner:
         url = f"https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=tle"
 
         if not os.path.exists(filename) or load.days_old(filename) >= max_days:
-            print(f"Downloading TLEs for {group}...")
+            log.info(f"Downloading TLEs for {group}...")
             load.download(url, filename=filename)
-        print("Data Located.")
+        log.info("Data Located.")
         return filename
 
     def _build_config(self):
@@ -66,5 +68,5 @@ class SOPPRunner:
         Runs the SOPP engine and returns raw interference events.
         """
         engine = Sopp(self.config)
-        print(f"Running SOPP for {len(self.config.satellites)} satellites...")
+        log.info(f"Running SOPP for {len(self.config.satellites)} satellites...")
         return engine.get_satellites_crossing_main_beam()
