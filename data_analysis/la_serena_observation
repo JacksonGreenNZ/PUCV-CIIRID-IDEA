@@ -31,13 +31,7 @@ planets = load('de421.bsp')
 earth = planets['earth']
 ts = load.timescale()
 
-beamwidth = 30
-
-#ensure variables can be imported (for later gui implementation)
-__all__ = [
-    "sat_track_plot", "select_data", "precompute_target_positions", 
-    "precompute_satellite_positions", "check_satellite_intersect", "earth", "ts"
-]
+beamwidth = 30 #radius rather than diamter
 
 def select_data(type):
     max_days = 7.0         #download again once 7 days old
@@ -76,7 +70,6 @@ def check_satellite_intersect(t_index, targPos, sat_positions):
 def sat_track_plot(observer, t_init, t_end, sats):
     #Lists for plotting
     times = []
-    sat_times, sat_alts, sat_azs = [], [], []
 
     #List for CSV export
     output_data = []
