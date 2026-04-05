@@ -1,5 +1,6 @@
 from sopp.builder.configuration_builder import ConfigurationBuilder
 from sopp.sopp import Sopp
+from core.run_config import RunConfig
 from models.beam_model import BeamModel
 from config import (
     LATITUDE, LONGITUDE, ELEVATION_M,
@@ -16,23 +17,25 @@ class SOPPRunner:
     Builds SOPP configuration and runs the interference engine.
     Uses BeamModel prefilter radius as the beamwidth passed to SOPP.
     """
-    def __init__(self, beam_model: BeamModel):
+    def __init__(self, beam_model: BeamModel, run_config: RunConfig, tle_file: str):
         self.beam_model = beam_model
+        self.run_config = run_config
+        self.tle_file = tle_file #passed in from TLELoaderThread on gui boot or initialisation on main for cli
         self.config = self._build_config()
 
     @staticmethod
-    def select_data(group):
+    def select_data(group: str) -> str:
         import os
         from skyfield.api import load
-
         max_days = 7.0
         filename = f"data/{group}.tle"
         url = f"https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=tle"
-
         if not os.path.exists(filename) or load.days_old(filename) >= max_days:
             log.info(f"Downloading TLEs for {group}...")
             load.download(url, filename=filename)
-        log.info("Data Located.")
+            log.info("TLE catalogue updated.")
+        else:
+            log.info("TLE catalogue up to date.")
         return filename
 
     def _build_config(self):
@@ -40,24 +43,22 @@ class SOPPRunner:
         Builds SOPP configuration using hardcoded parameters for testing and
         prefilter radius from BeamModel as the beamwidth.
         """
-        frequency_mhz = FREQUENCY_HZ / 1e6
-
-        tle_file = self.select_data(DATA_TYPE)
-        
+        rc = self.run_config
+        frequency_mhz = rc.frequency_hz / 1e6
         return (
             ConfigurationBuilder()
             .set_facility(
-                latitude=LATITUDE,
-                longitude=LONGITUDE,
-                elevation=ELEVATION_M,
+                latitude=rc.latitude,
+                longitude=rc.longitude,
+                elevation=rc.elevation_m,
                 name="observer",
                 beamwidth=self.beam_model.prefilter_radius_deg
             )
-            .set_runtime_settings(concurrency_level=CONCURRENCY_LEVEL)
-            .set_time_window(begin=TIME_BEGIN, end=TIME_END)
+            .set_runtime_settings(concurrency_level=rc.concurrency_level)
+            .set_time_window(begin=rc.time_begin, end=rc.time_end)
             .set_frequency_range(bandwidth=10, frequency=frequency_mhz)
-            .set_observation_target(f"{DEC_DEGREES}d", right_ascension=f"{RA_HOURS}h")
-            .set_satellites(tle_file=tle_file)
+            .set_observation_target(f"{rc.dec_degrees}d", right_ascension=f"{rc.ra_hours}h")
+            .set_satellites(tle_file=self.tle_file)
             .build()
         )
 

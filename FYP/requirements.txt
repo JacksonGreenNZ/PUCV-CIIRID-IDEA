@@ -16,6 +16,9 @@ packaging==26.0
 pillow==12.1.0
 pyerfa==2.0.1.5
 pyparsing==3.3.2
+PyQt6==6.10.2
+PyQt6-Qt6==6.10.2
+PyQt6_sip==13.11.1
 python-dateutil==2.8.2
 python-dotenv==0.21.1
 PyYAML==6.0.3
