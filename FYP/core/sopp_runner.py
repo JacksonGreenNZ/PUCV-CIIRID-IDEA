@@ -31,11 +31,11 @@ class SOPPRunner:
         filename = f"data/{group}.tle"
         url = f"https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=tle"
         if not os.path.exists(filename) or load.days_old(filename) >= max_days:
-            log.info(f"Downloading TLEs for {group}...")
+            log.debug(f"Downloading TLEs for {group}...")
             load.download(url, filename=filename)
-            log.info("TLE catalogue updated.")
+            log.debug("TLE catalogue updated.")
         else:
-            log.info("TLE catalogue up to date.")
+            log.debug("TLE catalogue up to date.")
         return filename
 
     def _build_config(self):

@@ -35,26 +35,27 @@ class Observer:
         self._precompute_target_positions()
 
     def _precompute_target_positions(self):
-        """
-        vectorised computation of target alt/az across full observation window at 1 second steps for later angular separation comparisons
-        """
         t_begin = self.ts.utc(
             datetime.fromisoformat(self._time_begin).replace(tzinfo=timezone.utc)
         )
         t_end = self.ts.utc(
             datetime.fromisoformat(self._time_end).replace(tzinfo=timezone.utc)
         )
-
         one_second = 1 / 86400.0
         self._time_array = self.ts.tt_jd(
             np.arange(t_begin.tt, t_end.tt, one_second)
         )
 
-        apparent = self.observer.at(self._time_array).observe(self.target).apparent()
-        alt, az, _ = apparent.altaz()
-
-        self._target_alts = alt.degrees
-        self._target_azs  = az.degrees
+        if self._is_static:
+            # fixed pointing — same az/alt for every timestep
+            n = len(self._time_array.tt)
+            self._target_alts = np.full(n, self._fixed_alt)
+            self._target_azs = np.full(n, self._fixed_az)
+        else:
+            apparent = self.observer.at(self._time_array).observe(self.target).apparent()
+            alt, az, _ = apparent.altaz()
+            self._target_alts = alt.degrees
+            self._target_azs = az.degrees
         
     #public properties for visualisation 
     @property

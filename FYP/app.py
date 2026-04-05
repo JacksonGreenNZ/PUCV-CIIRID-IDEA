@@ -18,8 +18,11 @@ logging.basicConfig(
 )
 
 def run():
-    app = QApplication(sys.argv)
+    environ["QT_QPA_PLATFORM"] = "xcb"
+    environ["QT_QUICK_BACKEND"] = "software"
     
+    app = QApplication(sys.argv)
+    app.setStyle('Fusion') #fixes linux painting issue?
     state = AppState()
     
     splash = SplashScreen("active")

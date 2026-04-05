@@ -27,6 +27,8 @@ class ObservatoryDialog(QDialog):
         self._dish_spin.setEnabled(not checked)
         self._gain_spin.setEnabled(not checked)
         self._freq_spin.setEnabled(not checked)
+        self.update()
+
 
     def _build_ui(self):
         root = QHBoxLayout(self)
@@ -64,8 +66,8 @@ class ObservatoryDialog(QDialog):
         self._lat_spin = self._coord_spin(-90, 90)
         self._lon_spin = self._coord_spin(-180, 180)
         self._elev_spin = self._coord_spin(-500, 9000, decimals=1, suffix=" m")
-        self._dish_spin = self._coord_spin(0, 999, decimals=2, suffix=" m")
-        self._freq_spin = self._coord_spin(0, 9.99e4, decimals=3, suffix=" MHz", step=1.0)
+        self._dish_spin = self._coord_spin(0, 400, decimals=2, suffix=" m")#biggest dish is 305m
+        self._freq_spin = self._coord_spin(0, 9.99e4, decimals=0, suffix=" MHz", step=1.0)
 
         form.addRow("Name", self._name_edit)
         form.addRow("Latitude (°)", self._lat_spin)
@@ -119,12 +121,14 @@ class ObservatoryDialog(QDialog):
         spin.setSuffix(suffix)
         if step:
             spin.setSingleStep(step)
+        self.update()
         return spin
 
     def _refresh_list(self):
         self._list.clear()
         for obs in self._saved:
             self._list.addItem(obs.name)
+        self.update()
 
     def _on_list_select(self, row: int):
         if row < 0:
@@ -159,6 +163,7 @@ class ObservatoryDialog(QDialog):
         self._bypass_check.blockSignals(False)
 
         self._beamwidth_spin.setValue(3.0)
+        self.update()
 
     def _current_observatory(self) -> Observatory | None:
         
@@ -167,6 +172,7 @@ class ObservatoryDialog(QDialog):
             QMessageBox.warning(self, "Missing Name", "Please enter a name for this observatory.")
             return None
         self._force_commit_ui()
+        self.update()
         return Observatory(
             name=name,
             latitude=self._lat_spin.value(),
@@ -204,6 +210,7 @@ class ObservatoryDialog(QDialog):
         self._saved.append(obs)
         self._persist()
         self._refresh_list()
+        self.update()
 
     def _delete_selected(self):
         row = self._list.currentRow()
@@ -213,6 +220,7 @@ class ObservatoryDialog(QDialog):
         self._persist()
         self._refresh_list()
         self._delete_btn.setEnabled(False)
+        self.update()
 
     def _confirm(self):
         obs = self._current_observatory()
