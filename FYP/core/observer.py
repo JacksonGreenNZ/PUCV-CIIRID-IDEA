@@ -12,22 +12,24 @@ class Observer:
     Wraps skyfield setup, precomputes target positions across observation window,
     and provides angular separation via haversine.
     """
-    def __init__(self):
+    def __init__(self, latitude: float, longitude: float, elevation_m: float, 
+                 ra_hours: float, dec_degrees: float, time_begin: str, time_end: str):
         self.ts = load.timescale()
         self.planets = load('de421.bsp')
         self.earth = self.planets['earth']
-        self.location = wgs84.latlon(LATITUDE, LONGITUDE, elevation_m=ELEVATION_M)
+        self.location = wgs84.latlon(latitude, longitude, elevation_m=elevation_m)
         self.observer = self.location + self.earth
-        self.target = Star(ra_hours=RA_HOURS, dec_degrees=DEC_DEGREES)
-
+        self.target = Star(ra_hours=ra_hours, dec_degrees=dec_degrees)
+        self._time_begin = time_begin
+        self._time_end = time_end
         self._precompute_target_positions()
 
     def _precompute_target_positions(self):
         """
         vectorised computation of target alt/az across full observation window at 1 second steps for later angular separation comparisons
         """
-        t_begin = self.ts.from_datetime(datetime.fromisoformat(TIME_BEGIN).replace(tzinfo=timezone.utc))
-        t_end   = self.ts.from_datetime(datetime.fromisoformat(TIME_END).replace(tzinfo=timezone.utc))
+        t_begin = self._time_begin
+        t_end   = self._time_end
 
         one_second = 1 / 86400.0
         self._time_array = self.ts.tt_jd(

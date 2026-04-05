@@ -5,6 +5,20 @@
     "longitude": -174.0,
     "elevation_m": 0.0,
     "dish_diameter_m": 30.0,
-    "frequency_hz": 1000000000.0
+    "frequency_hz": 1000000000000.0,
+    "gain_cutoff_percent": 50.0,
+    "bypass_airy": false,
+    "manual_beamwidth_deg": 3.0
+  },
+  {
+    "name": "Warkworth1",
+    "latitude": -36.0,
+    "longitude": -174.0,
+    "elevation_m": 0.0,
+    "dish_diameter_m": 30.0,
+    "frequency_hz": 1000000000000.0,
+    "gain_cutoff_percent": 3.0,
+    "bypass_airy": true,
+    "manual_beamwidth_deg": 3.0
   }
 ]

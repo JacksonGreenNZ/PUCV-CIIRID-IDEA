@@ -46,6 +46,10 @@ class MainWindow(QMainWindow):
         self.targ_btn.clicked.connect(self._select_target)
         self.win_btn.clicked.connect(self._select_window)
 
+        self.reset_btn = QPushButton("Reset")
+        self.reset_btn.clicked.connect(self._reset_state)
+        left.addWidget(self.reset_btn) 
+
         self.compute_btn = QPushButton("Compute Interference")
         self.compute_btn.setEnabled(False)
         self.compute_btn.setFixedHeight(44)
@@ -116,8 +120,12 @@ class MainWindow(QMainWindow):
         if self._state.target:
             self.targ_btn.setText(f"Target Selection\n{self._state.target.name}")
         if self._state.window:
-            start, end, _ = self._state.window
-            self.win_btn.setText(f"Window Selection\n{start} → {end}")
+            start, end, gap = self._state.window
+            from datetime import datetime
+            delta = int((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds())
+            h, m = delta // 3600, (delta % 3600) // 60
+            s = delta % 60
+            self.win_btn.setText(f"Window Selection\n{start}\n{h:02d}h{m:02d}m{s:02d}s")
 
     def _on_analysis_done(self, results):
         self.export_csv_btn.setEnabled(True)
@@ -147,10 +155,26 @@ class MainWindow(QMainWindow):
             self._state.state_changed.emit()
 
     def _run_analysis(self):
-        self._state.run_analysis()  # AppState owns this, not MainWindow
+        self._state.run_analysis()  #AppState owns this, not MainWindow
 
     def _export_csv(self):
         self._state.export_csv()
 
     def _export_video(self):
         self._state.export_video()
+        
+    def _reset_state(self):
+        self._state.observatory = None
+        self._state.target = None
+        self._state.window = None
+        self._state.window = None
+        self._results = None
+        self.obs_btn.setText("Observatory Selection\nNone Selected")
+        self.targ_btn.setText("Target Selection\nNone Selected")
+        self.win_btn.setText("Window Selection\nNone Selected")
+        self.export_csv_btn.setEnabled(False)
+        self.export_video_btn.setEnabled(False)
+        self.clean_stretches_view.clear()
+        self.linked_groups_view.clear()
+        self.log_view.clear()
+        self._state.state_changed.emit()

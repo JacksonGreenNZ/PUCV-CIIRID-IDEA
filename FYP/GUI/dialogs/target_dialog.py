@@ -1,12 +1,13 @@
-import json
-from pathlib import Path
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QPushButton, QListWidget, QLabel,
-    QSpinBox, QDoubleSpinBox, QWidget, QMessageBox
+    QSpinBox, QDoubleSpinBox, QWidget, QMessageBox,
+    QRadioButton, QButtonGroup, QStackedWidget
 )
 from PyQt6.QtCore import Qt
 from core.app_state import Target
+import json
+from pathlib import Path
 
 SAVED_TARGETS_FILE = Path("data/targets.json")
 
@@ -15,10 +16,9 @@ class TargetDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Select Target")
-        self.setMinimumSize(600, 400)
+        self.setMinimumSize(600, 420)
         self._selected: Target | None = None
         self._saved: list[Target] = self._load_saved()
-
         self._build_ui()
         self._refresh_list()
 
@@ -30,31 +30,49 @@ class TargetDialog(QDialog):
         # --- Left: saved list ---
         left = QVBoxLayout()
         left.addWidget(QLabel("Saved Targets"))
-
         self._list = QListWidget()
         self._list.currentRowChanged.connect(self._on_list_select)
         left.addWidget(self._list)
-
         self._search_btn = QPushButton("Search Catalogue...")
         self._search_btn.setEnabled(False)
         self._search_btn.setToolTip("Online target catalogue — coming soon")
         left.addWidget(self._search_btn)
-
         left_widget = QWidget()
         left_widget.setLayout(left)
         left_widget.setFixedWidth(200)
 
-        # --- Right: entry form ---
+        # --- Right ---
         right = QVBoxLayout()
         right.addWidget(QLabel("Target Details"))
 
-        form = QFormLayout()
-        form.setSpacing(8)
-
+        # name
+        form_top = QFormLayout()
         self._name_edit = QLineEdit()
         self._name_edit.setPlaceholderText("e.g. Vela Pulsar")
+        form_top.addRow("Name", self._name_edit)
+        right.addLayout(form_top)
 
-        # RA: HH MM SS.ss
+        # mode toggle
+        mode_row = QHBoxLayout()
+        self._mode_tracking = QRadioButton("Tracking (RA/Dec)")
+        self._mode_static = QRadioButton("Fixed (Az/Alt)")
+        self._mode_tracking.setChecked(True)
+        mode_group = QButtonGroup(self)
+        mode_group.addButton(self._mode_tracking)
+        mode_group.addButton(self._mode_static)
+        self._mode_tracking.toggled.connect(self._on_mode_changed)
+        mode_row.addWidget(self._mode_tracking)
+        mode_row.addWidget(self._mode_static)
+        mode_row.addStretch()
+        right.addLayout(mode_row)
+
+        # stacked input panels
+        self._stack = QStackedWidget()
+
+        # page 0: RA/Dec
+        radec_widget = QWidget()
+        radec_form = QFormLayout(radec_widget)
+        radec_form.setSpacing(8)
         ra_row = QHBoxLayout()
         self._ra_h = self._int_spin(0, 23, suffix="h")
         self._ra_m = self._int_spin(0, 59, suffix="m")
@@ -63,8 +81,6 @@ class TargetDialog(QDialog):
         ra_row.addWidget(self._ra_m)
         ra_row.addWidget(self._ra_s)
         ra_row.addStretch()
-
-        # Dec: +/- DD MM SS.ss
         dec_row = QHBoxLayout()
         self._dec_sign = QPushButton("+")
         self._dec_sign.setFixedWidth(32)
@@ -78,25 +94,35 @@ class TargetDialog(QDialog):
         dec_row.addWidget(self._dec_m)
         dec_row.addWidget(self._dec_s)
         dec_row.addStretch()
+        radec_form.addRow("Right Ascension", ra_row)
+        radec_form.addRow("Declination", dec_row)
+        self._stack.addWidget(radec_widget)
 
-        form.addRow("Name", self._name_edit)
-        form.addRow("Right Ascension", ra_row)
-        form.addRow("Declination", dec_row)
+        # page 1: Az/Alt
+        altaz_widget = QWidget()
+        altaz_form = QFormLayout(altaz_widget)
+        altaz_form.setSpacing(8)
+        self._az_spin = self._coord_spin(0, 360, suffix="°")
+        self._alt_spin = self._coord_spin(0, 90, suffix="°")
+        self._az_spin.setToolTip("Azimuth: 0=N, 90=E, 180=S, 270=W")
+        self._alt_spin.setToolTip("Altitude above horizon in degrees")
+        altaz_form.addRow("Azimuth", self._az_spin)
+        altaz_form.addRow("Altitude", self._alt_spin)
+        self._stack.addWidget(altaz_widget)
 
-        right.addLayout(form)
+        right.addWidget(self._stack)
         right.addStretch()
 
+        # buttons
         btn_row = QHBoxLayout()
         self._save_btn = QPushButton("Save Target")
         self._delete_btn = QPushButton("Delete")
         self._delete_btn.setEnabled(False)
         confirm_btn = QPushButton("Confirm")
         confirm_btn.setDefault(True)
-
         self._save_btn.clicked.connect(self._save_current)
         self._delete_btn.clicked.connect(self._delete_selected)
         confirm_btn.clicked.connect(self._confirm)
-
         btn_row.addWidget(self._save_btn)
         btn_row.addWidget(self._delete_btn)
         btn_row.addStretch()
@@ -105,6 +131,11 @@ class TargetDialog(QDialog):
 
         root.addWidget(left_widget)
         root.addLayout(right)
+
+    def _on_mode_changed(self):
+        self._stack.setCurrentIndex(0 if self._mode_tracking.isChecked() else 1)
+
+    # --- Spinbox helpers ---
 
     def _int_spin(self, min_val, max_val, suffix="") -> QSpinBox:
         spin = QSpinBox()
@@ -121,10 +152,17 @@ class TargetDialog(QDialog):
         spin.setFixedWidth(88)
         return spin
 
+    def _coord_spin(self, min_val, max_val, suffix="") -> QDoubleSpinBox:
+        spin = QDoubleSpinBox()
+        spin.setRange(min_val, max_val)
+        spin.setDecimals(4)
+        spin.setSuffix(suffix)
+        return spin
+
     def _toggle_dec_sign(self):
         self._dec_sign.setText("-" if self._dec_sign.isChecked() else "+")
 
-    # --- Conversion helpers ---
+    # --- RA/Dec conversion ---
 
     def _get_ra_hours(self) -> float:
         return self._ra_h.value() + self._ra_m.value() / 60 + self._ra_s.value() / 3600
@@ -166,8 +204,14 @@ class TargetDialog(QDialog):
             return
         t = self._saved[row]
         self._name_edit.setText(t.name)
-        self._set_ra_hours(t.ra_hours)
-        self._set_dec_degrees(t.dec_degrees)
+        if t.is_static:
+            self._mode_static.setChecked(True)
+            self._az_spin.setValue(t.azimuth_deg or 0.0)
+            self._alt_spin.setValue(t.altitude_deg or 0.0)
+        else:
+            self._mode_tracking.setChecked(True)
+            self._set_ra_hours(t.ra_hours or 0.0)
+            self._set_dec_degrees(t.dec_degrees or 0.0)
         self._delete_btn.setEnabled(True)
 
     def _current_target(self) -> Target | None:
@@ -175,11 +219,20 @@ class TargetDialog(QDialog):
         if not name:
             QMessageBox.warning(self, "Missing Name", "Please enter a name for this target.")
             return None
-        return Target(
-            name=name,
-            ra_hours=self._get_ra_hours(),
-            dec_degrees=self._get_dec_degrees(),
-        )
+        if self._mode_static.isChecked():
+            return Target(
+                name=name,
+                azimuth_deg=self._az_spin.value(),
+                altitude_deg=self._alt_spin.value(),
+                is_static=True,
+            )
+        else:
+            return Target(
+                name=name,
+                ra_hours=self._get_ra_hours(),
+                dec_degrees=self._get_dec_degrees(),
+                is_static=False,
+            )
 
     def _save_current(self):
         target = self._current_target()
@@ -227,7 +280,14 @@ class TargetDialog(QDialog):
 
     @staticmethod
     def _target_to_dict(t: Target) -> dict:
-        return {"name": t.name, "ra_hours": t.ra_hours, "dec_degrees": t.dec_degrees}
+        return {
+            "name": t.name,
+            "ra_hours": t.ra_hours,
+            "dec_degrees": t.dec_degrees,
+            "azimuth_deg": t.azimuth_deg,
+            "altitude_deg": t.altitude_deg,
+            "is_static": t.is_static,
+        }
 
     @staticmethod
     def _target_from_dict(d: dict) -> Target:

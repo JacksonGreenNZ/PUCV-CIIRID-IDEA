@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QPushButton, QListWidget, QLabel,
-    QDoubleSpinBox, QWidget, QSplitter, QMessageBox
+    QDoubleSpinBox, QWidget, QMessageBox, QCheckBox
 )
 from PyQt6.QtCore import Qt
 from core.app_state import Observatory
@@ -21,6 +21,11 @@ class ObservatoryDialog(QDialog):
 
         self._build_ui()
         self._refresh_list()
+
+    def _on_bypass_toggled(self, checked: bool):
+        self._beamwidth_spin.setEnabled(checked)
+        self._dish_spin.setEnabled(not checked)
+        self._gain_spin.setEnabled(not checked)
 
     def _build_ui(self):
         root = QHBoxLayout(self)
@@ -67,6 +72,21 @@ class ObservatoryDialog(QDialog):
         form.addRow("Elevation (m, set 0 if unknown)", self._elev_spin)
         form.addRow("Dish Diameter (m)", self._dish_spin)
         form.addRow("Frequency (MHz)", self._freq_spin)
+        
+        self._gain_spin = self._coord_spin(0, 100, decimals=1, suffix=" %")
+        self._gain_spin.setValue(3.0)
+        self._gain_spin.setToolTip("Minimum gain threshold as percentage of boresight — signals below this are ignored")
+        form.addRow("Gain Cutoff", self._gain_spin)
+        
+        self._bypass_check = QCheckBox("Skip Airy gain model — use manual beamwidth")
+        self._bypass_check.toggled.connect(self._on_bypass_toggled)
+        form.addRow("", self._bypass_check)
+
+        self._beamwidth_spin = self._coord_spin(0, 180, decimals=2, suffix="°")
+        self._beamwidth_spin.setValue(3.0)
+        self._beamwidth_spin.setEnabled(False)
+        self._beamwidth_spin.setToolTip("Beamwidth passed directly to SOPP")
+        form.addRow("Beamwidth", self._beamwidth_spin)
 
         right.addLayout(form)
         right.addStretch()
@@ -130,6 +150,9 @@ class ObservatoryDialog(QDialog):
             elevation_m=self._elev_spin.value(),
             dish_diameter_m=self._dish_spin.value(),
             frequency_hz=self._freq_spin.value() * 1e6,
+            gain_cutoff_percent=self._gain_spin.value(),
+            bypass_airy=self._bypass_check.isChecked(),
+            manual_beamwidth_deg=self._beamwidth_spin.value(),
         )
 
     def _save_current(self):
@@ -186,6 +209,9 @@ class ObservatoryDialog(QDialog):
             "elevation_m": obs.elevation_m,
             "dish_diameter_m": obs.dish_diameter_m,
             "frequency_hz": obs.frequency_hz,
+            "gain_cutoff_percent": obs.gain_cutoff_percent,
+            "bypass_airy": obs.bypass_airy,
+            "manual_beamwidth_deg": obs.manual_beamwidth_deg,
         }
 
     @staticmethod

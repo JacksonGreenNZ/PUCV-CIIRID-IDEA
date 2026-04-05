@@ -5,7 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from dataclasses import dataclass
 from typing import Optional
 from pathlib import Path
-
+from typing import Optional
 from core.run_config import RunConfig
 from core.analysis_thread import AnalysisThread
 
@@ -20,13 +20,18 @@ class Observatory:
     elevation_m: float
     dish_diameter_m: float
     frequency_hz: float
-
+    gain_cutoff_percent: float = 3.0
+    bypass_airy: bool = False
+    manual_beamwidth_deg: float = 3.0
 
 @dataclass
 class Target:
     name: str
-    ra_hours: float
-    dec_degrees: float
+    ra_hours: Optional[float] = None
+    dec_degrees: Optional[float] = None
+    azimuth_deg: Optional[float] = None
+    altitude_deg: Optional[float] = None
+    is_static: bool = False
 
 
 @dataclass
@@ -62,6 +67,7 @@ class AppState(QObject):
         return all([self.tle_file, self.observatory, self.target, self.window])
 
     def build_run_config(self) -> RunConfig:
+        assert self.observatory and self.target and self.window
         return RunConfig(
             latitude=self.observatory.latitude,
             longitude=self.observatory.longitude,
@@ -70,10 +76,14 @@ class AppState(QObject):
             frequency_hz=self.observatory.frequency_hz,
             ra_hours=self.target.ra_hours,
             dec_degrees=self.target.dec_degrees,
+            azimuth_deg=self.target.azimuth_deg,
+            altitude_deg=self.target.altitude_deg,
             time_begin=self.window[0],
             time_end=self.window[1],
             gap_tolerance_seconds=self.window[2],
-            gain_cutoff_percent=3,
+            gain_cutoff_percent=self.observatory.gain_cutoff_percent,
+            bypass_airy=self.observatory.bypass_airy,
+            manual_beamwidth_deg=self.observatory.manual_beamwidth_deg,
             concurrency_level=os.cpu_count(),
             data_type="starlink",
         )

@@ -56,8 +56,22 @@ def main(run_config: RunConfig = None):
         
     #initialise core components
     tle_file = SOPPRunner.select_data(run_config.data_type)
-    beam_model = BeamModel()
-    observer = Observer()
+    beam_model = BeamModel(
+        dish_diameter_m=run_config.dish_diameter_m,
+        frequency_hz=run_config.frequency_hz,
+        gain_cutoff_percent=run_config.gain_cutoff_percent,
+    )
+    
+    assert run_config.ra_hours is not None and run_config.dec_degrees is not None
+    observer = Observer(
+        latitude=run_config.latitude,
+        longitude=run_config.longitude,
+        elevation_m=run_config.elevation_m,
+        ra_hours=run_config.ra_hours,
+        dec_degrees=run_config.dec_degrees,
+        time_begin=run_config.time_begin,
+        time_end=run_config.time_end,
+    )
     
     log.debug(f"Prefilter radius: {beam_model.prefilter_radius_deg:.4f} degrees")
 

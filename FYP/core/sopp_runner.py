@@ -39,28 +39,42 @@ class SOPPRunner:
         return filename
 
     def _build_config(self):
-        """
-        Builds SOPP configuration using hardcoded parameters for testing and
-        prefilter radius from BeamModel as the beamwidth.
-        """
         rc = self.run_config
         frequency_mhz = rc.frequency_hz / 1e6
-        return (
+        beamwidth = (
+            rc.manual_beamwidth_deg 
+            if rc.bypass_airy 
+            else self.beam_model.prefilter_radius_deg
+        )
+        builder = (
             ConfigurationBuilder()
             .set_facility(
                 latitude=rc.latitude,
                 longitude=rc.longitude,
                 elevation=rc.elevation_m,
                 name="observer",
-                beamwidth=self.beam_model.prefilter_radius_deg
+                beamwidth=beamwidth
             )
             .set_runtime_settings(concurrency_level=rc.concurrency_level)
             .set_time_window(begin=rc.time_begin, end=rc.time_end)
             .set_frequency_range(bandwidth=10, frequency=frequency_mhz)
-            .set_observation_target(f"{rc.dec_degrees}d", right_ascension=f"{rc.ra_hours}h")
             .set_satellites(tle_file=self.tle_file)
-            .build()
         )
+
+        if rc.is_static():
+            builder = builder.set_observation_target(
+                altitude=rc.altitude_deg,
+                azimuth=rc.azimuth_deg,
+            )
+        elif rc.is_tracking():
+            builder = builder.set_observation_target(
+                f"{rc.dec_degrees}d",
+                right_ascension=f"{rc.ra_hours}h"
+            )
+        else:
+            raise ValueError("RunConfig must have either RA/Dec or Az/Alt set.")
+
+        return builder.build()
 
     
 

@@ -4,10 +4,10 @@ from scipy.optimize import brentq
 from config import DISH_DIAMETER_M, FREQUENCY_HZ, GAIN_CUTOFF_PERCENT
 
 class BeamModel:
-    def __init__(self):
-        self.diameter = DISH_DIAMETER_M
-        self.wavelength = 3e8 / FREQUENCY_HZ
-        self.threshold = GAIN_CUTOFF_PERCENT / 100.0
+    def __init__(self, dish_diameter_m: float, frequency_hz: float, gain_cutoff_percent: float = 3.0):
+        self.diameter = dish_diameter_m
+        self.wavelength = 3e8 / frequency_hz
+        self.threshold = gain_cutoff_percent / 100.0
         self.prefilter_radius_deg = self.compute_prefilter_radius()
 
     def airy_gain(self, theta_deg):
