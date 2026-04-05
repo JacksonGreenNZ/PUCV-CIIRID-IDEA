@@ -1,22 +1,31 @@
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QTabWidget, QTextEdit, QSplitter
+    QPushButton, QLabel, QTabWidget, QTextEdit
 )
 from PyQt6.QtGui import QFont
 
+from core.app_state import AppState
+from GUI.dialogs.observatory_dialog import ObservatoryDialog
+from GUI.dialogs.target_dialog import TargetDialog
+from GUI.dialogs.window_dialog import WindowDialog
+
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, state: AppState):
         super().__init__()
+        self._state = state
         self.setWindowTitle("Satellite RFI Predictor")
         self.setMinimumSize(900, 600)
-        self.tle_file = None
-        self.observatory = None
-        self.target = None
-        self.window = None
 
         self._build_ui()
+        self._connect_state()
+
+    def _connect_state(self):
+        """Wire AppState signals to UI refresh methods."""
+        self._state.state_changed.connect(self._refresh_ui)
+        self._state.log_message.connect(self.log_view.append)
+        self._state.analysis_complete.connect(self._on_analysis_done)
 
     def _build_ui(self):
         central = QWidget()
@@ -25,7 +34,7 @@ class MainWindow(QMainWindow):
         root.setContentsMargins(16, 16, 16, 16)
         root.setSpacing(16)
 
-        # --- Left panel: config buttons ---
+        # --- Left panel ---
         left = QVBoxLayout()
         left.setSpacing(10)
 
@@ -48,7 +57,7 @@ class MainWindow(QMainWindow):
         left.addStretch()
         left.addWidget(self.compute_btn)
 
-        # --- Right panel: results tabs ---
+        # --- Right panel ---
         right = QVBoxLayout()
 
         self.tabs = QTabWidget()
@@ -56,23 +65,15 @@ class MainWindow(QMainWindow):
         self.clean_stretches_view.setReadOnly(True)
         self.linked_groups_view = QTextEdit()
         self.linked_groups_view.setReadOnly(True)
-
         self.tabs.addTab(self.clean_stretches_view, "Clean Stretches")
         self.tabs.addTab(self.linked_groups_view, "Linked Groups")
 
-        #log output at the bottom of the right panel
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
         self.log_view.setFixedHeight(120)
         self.log_view.setPlaceholderText("Log output will appear here...")
-        font = QFont("Arial", 9)
-        self.log_view.setFont(font)
+        self.log_view.setFont(QFont("Arial", 9))
 
-        right.addWidget(self.tabs)
-        right.addWidget(QLabel("Log"))
-        right.addWidget(self.log_view)
-
-        #export buttons
         export_row = QHBoxLayout()
         export_row.addStretch()
         self.export_csv_btn = QPushButton("Export CSV")
@@ -83,9 +84,12 @@ class MainWindow(QMainWindow):
         self.export_video_btn.clicked.connect(self._export_video)
         export_row.addWidget(self.export_csv_btn)
         export_row.addWidget(self.export_video_btn)
+
+        right.addWidget(self.tabs)
+        right.addWidget(QLabel("Log"))
+        right.addWidget(self.log_view)
         right.addLayout(export_row)
 
-        #root layout
         left_widget = QWidget()
         left_widget.setLayout(left)
         left_widget.setFixedWidth(220)
@@ -96,60 +100,57 @@ class MainWindow(QMainWindow):
         root.addWidget(left_widget)
         root.addWidget(right_widget)
 
+    # --- UI helpers ---
+
     def _config_button(self, text: str) -> QPushButton:
         btn = QPushButton(text)
         btn.setFixedHeight(64)
-        btn.setCheckable(False)
         return btn
 
-    def _update_compute_button(self):
-        ready = all([self.observatory, self.target, self.window])
-        self.compute_btn.setEnabled(ready)
+    def _refresh_ui(self):
+        """Called whenever AppState changes — sync all UI to current state."""
+        self.compute_btn.setEnabled(self._state.is_ready())
 
-    def _update_button_label(self, btn: QPushButton, title: str, value: str):
-        btn.setText(f"{title}\n{value}")
-        
-    def set_tle_file(self, tle_file: str): 
-        self.tle_file = tle_file
+        if self._state.observatory:
+            self.obs_btn.setText(f"Observatory Selection\n{self._state.observatory.name}")
+        if self._state.target:
+            self.targ_btn.setText(f"Target Selection\n{self._state.target.name}")
+        if self._state.window:
+            start, end = self._state.window
+            self.win_btn.setText(f"Window Selection\n{start} → {end}")
+
+    def _on_analysis_done(self, results):
+        """Enable exports and populate result tabs once analysis finishes."""
+        self.export_csv_btn.setEnabled(True)
+        self.export_video_btn.setEnabled(True)
+        self.clean_stretches_view.setPlainText(results.clean_stretches_text)
+        self.linked_groups_view.setPlainText(results.linked_groups_text)
 
     # --- Slots ---
 
     def _select_observatory(self):
-        # TODO: open ObservatoryDialog, set self.observatory
-        self.observatory = "Warkworth 30m"  # placeholder
-        self._update_button_label(self.obs_btn, "Observatory Selection:", self.observatory)
-        self._update_compute_button()
+        dlg = ObservatoryDialog(self)
+        if dlg.exec():
+            self._state.observatory = dlg.result()
+            self._state.state_changed.emit()
 
     def _select_target(self):
-        # TODO: open TargetDialog, set self.target
-        self.target = "Vela"  # placeholder
-        self._update_button_label(self.targ_btn, "Target Selection:", self.target)
-        self._update_compute_button()
+        dlg = TargetDialog(self)
+        if dlg.exec():
+            self._state.target = dlg.result()
+            self._state.state_changed.emit()
 
     def _select_window(self):
-        # TODO: open WindowDialog, set self.window
-        self.window = ("2026-10-16 16:20", "2026-10-16 16:40")  # placeholder
-        label = f"{self.window[0]} → {self.window[1]}"
-        self._update_button_label(self.win_btn, "Window Selection:", label)
-        self._update_compute_button()
+        dlg = WindowDialog(self)
+        if dlg.exec():
+            self._state.window = dlg.result()
+            self._state.state_changed.emit()
 
     def _run_analysis(self):
-        # TODO: call main() from engine, route log output to self.log_view
-        self.log_view.append("Analysis started...")
-        self.export_csv_btn.setEnabled(True)
-        self.export_video_btn.setEnabled(True)
+        self._state.run_analysis()  # AppState owns this, not MainWindow
 
     def _export_csv(self):
-        # TODO: open save dialog, write CSV
-        pass
+        self._state.export_csv()
 
     def _export_video(self):
-        # TODO: call save_animation()
-        pass
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+        self._state.export_video()

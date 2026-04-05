@@ -7,7 +7,11 @@ from core.tle_loader import TLELoaderThread
 
 class SplashScreen(QDialog):
     ready = pyqtSignal(str)
-
+    
+    @property
+    def tle_file(self) -> str | None:
+        return self._tle_file
+    
     def __init__(self, group: str = "active"):
         super().__init__()
         self.setWindowTitle("RFI Window Analyser")

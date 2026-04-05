@@ -2,20 +2,22 @@ import sys
 from PyQt6.QtWidgets import QApplication
 from GUI.splash import SplashScreen
 from GUI.main_window import MainWindow
-
+from core.app_state import AppState
 
 def run():
     app = QApplication(sys.argv)
-
-    main_window = MainWindow()
-
+    
+    state = AppState()
+    
     splash = SplashScreen("starlink")
-    splash.ready.connect(main_window.set_tle_file)
-    splash.ready.connect(lambda: main_window.show())
-    splash.exec() #blocks until accept() is called
-
-    sys.exit(app.exec()) #then starts main event loop
-
+    splash.exec()  #blocks until accept()
+    
+    state.set_tle_file(splash.tle_file)  #grab result directly after exec
+    
+    window = MainWindow(state)
+    window.show()
+    
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     run()
