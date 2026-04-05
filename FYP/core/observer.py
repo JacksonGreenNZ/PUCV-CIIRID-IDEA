@@ -1,5 +1,6 @@
 import numpy as np
 from skyfield.api import load, wgs84, Star
+from datetime import datetime, timezone
 from config import (
     LATITUDE, LONGITUDE, ELEVATION_M,
     RA_HOURS, DEC_DEGREES,
@@ -12,24 +13,37 @@ class Observer:
     Wraps skyfield setup, precomputes target positions across observation window,
     and provides angular separation via haversine.
     """
-    def __init__(self, latitude: float, longitude: float, elevation_m: float, 
-                 ra_hours: float, dec_degrees: float, time_begin: str, time_end: str):
+    def __init__(self, latitude: float, longitude: float, elevation_m: float,
+                 time_begin: str, time_end: str,
+                 ra_hours: float | None = None, dec_degrees: float | None = None,
+                 azimuth_deg: float | None = None, altitude_deg: float | None = None):
         self.ts = load.timescale()
         self.planets = load('de421.bsp')
         self.earth = self.planets['earth']
         self.location = wgs84.latlon(latitude, longitude, elevation_m=elevation_m)
         self.observer = self.location + self.earth
-        self.target = Star(ra_hours=ra_hours, dec_degrees=dec_degrees)
         self._time_begin = time_begin
         self._time_end = time_end
+        self._is_static = azimuth_deg is not None and altitude_deg is not None
+        self._fixed_az = azimuth_deg
+        self._fixed_alt = altitude_deg
+
+        if not self._is_static:
+            assert ra_hours is not None and dec_degrees is not None
+            self.target = Star(ra_hours=ra_hours, dec_degrees=dec_degrees)
+
         self._precompute_target_positions()
 
     def _precompute_target_positions(self):
         """
         vectorised computation of target alt/az across full observation window at 1 second steps for later angular separation comparisons
         """
-        t_begin = self._time_begin
-        t_end   = self._time_end
+        t_begin = self.ts.utc(
+            datetime.fromisoformat(self._time_begin).replace(tzinfo=timezone.utc)
+        )
+        t_end = self.ts.utc(
+            datetime.fromisoformat(self._time_end).replace(tzinfo=timezone.utc)
+        )
 
         one_second = 1 / 86400.0
         self._time_array = self.ts.tt_jd(

@@ -119,6 +119,8 @@ class MainWindow(QMainWindow):
             self.obs_btn.setText(f"Observatory Selection\n{self._state.observatory.name}")
         if self._state.target:
             self.targ_btn.setText(f"Target Selection\n{self._state.target.name}")
+        else:
+            self.targ_btn.setText("Target Selection\nNone")
         if self._state.window:
             start, end, gap = self._state.window
             from datetime import datetime
@@ -126,6 +128,8 @@ class MainWindow(QMainWindow):
             h, m = delta // 3600, (delta % 3600) // 60
             s = delta % 60
             self.win_btn.setText(f"Window Selection\n{start}\n{h:02d}h{m:02d}m{s:02d}s")
+        self.update()
+        self.repaint()
 
     def _on_analysis_done(self, results):
         self.export_csv_btn.setEnabled(True)

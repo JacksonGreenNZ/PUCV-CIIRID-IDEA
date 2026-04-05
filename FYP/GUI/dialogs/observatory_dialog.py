@@ -26,6 +26,7 @@ class ObservatoryDialog(QDialog):
         self._beamwidth_spin.setEnabled(checked)
         self._dish_spin.setEnabled(not checked)
         self._gain_spin.setEnabled(not checked)
+        self._freq_spin.setEnabled(not checked)
 
     def _build_ui(self):
         root = QHBoxLayout(self)
@@ -64,7 +65,7 @@ class ObservatoryDialog(QDialog):
         self._lon_spin = self._coord_spin(-180, 180)
         self._elev_spin = self._coord_spin(-500, 9000, decimals=1, suffix=" m")
         self._dish_spin = self._coord_spin(0, 999, decimals=2, suffix=" m")
-        self._freq_spin = self._coord_spin(0, 1e6, decimals=3, suffix=" MHz", step=1.0)
+        self._freq_spin = self._coord_spin(0, 9.99e4, decimals=3, suffix=" MHz", step=1.0)
 
         form.addRow("Name", self._name_edit)
         form.addRow("Latitude (°)", self._lat_spin)
@@ -128,6 +129,7 @@ class ObservatoryDialog(QDialog):
     def _on_list_select(self, row: int):
         if row < 0:
             self._delete_btn.setEnabled(False)
+            self._clear_form()
             return
         obs = self._saved[row]
         self._name_edit.setText(obs.name)
@@ -137,23 +139,61 @@ class ObservatoryDialog(QDialog):
         self._dish_spin.setValue(obs.dish_diameter_m)
         self._freq_spin.setValue(obs.frequency_hz)
         self._delete_btn.setEnabled(True)
+        self._bypass_check.blockSignals(True)
+        self._bypass_check.setChecked(obs.bypass_airy)
+        self._bypass_check.blockSignals(False)
+        self._on_bypass_toggled(obs.bypass_airy)
+        self.update()
+
+    def _clear_form(self):
+        self._name_edit.clear()
+        self._lat_spin.setValue(0)
+        self._lon_spin.setValue(0)
+        self._elev_spin.setValue(0)
+        self._dish_spin.setValue(0)
+        self._freq_spin.setValue(0)
+        self._gain_spin.setValue(3.0)
+
+        self._bypass_check.blockSignals(True)
+        self._bypass_check.setChecked(False)
+        self._bypass_check.blockSignals(False)
+
+        self._beamwidth_spin.setValue(3.0)
 
     def _current_observatory(self) -> Observatory | None:
+        
         name = self._name_edit.text().strip()
         if not name:
             QMessageBox.warning(self, "Missing Name", "Please enter a name for this observatory.")
             return None
+        self._force_commit_ui()
         return Observatory(
             name=name,
             latitude=self._lat_spin.value(),
             longitude=self._lon_spin.value(),
             elevation_m=self._elev_spin.value(),
             dish_diameter_m=self._dish_spin.value(),
-            frequency_hz=self._freq_spin.value() * 1e6,
+            frequency_hz=self._freq_spin.value()*1e6,
             gain_cutoff_percent=self._gain_spin.value(),
             bypass_airy=self._bypass_check.isChecked(),
             manual_beamwidth_deg=self._beamwidth_spin.value(),
         )
+        
+    def _force_commit_ui(self):
+        # forces QLineEdit to commit text
+        self._name_edit.clearFocus()
+
+        # forces QDoubleSpinBox to commit any in-progress edits
+        for w in [
+            self._lat_spin,
+            self._lon_spin,
+            self._elev_spin,
+            self._dish_spin,
+            self._freq_spin,
+            self._gain_spin,
+            self._beamwidth_spin,
+        ]:
+            w.interpretText()
 
     def _save_current(self):
         obs = self._current_observatory()

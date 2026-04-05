@@ -22,7 +22,7 @@ def run():
     
     state = AppState()
     
-    splash = SplashScreen("starlink")
+    splash = SplashScreen("active")
     splash.exec()  #blocks until accept()
     
     state.set_tle_file(splash.tle_file)  #grab result directly after exec
