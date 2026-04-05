@@ -16,13 +16,32 @@ logging.basicConfig(
         logging.FileHandler("outputs/rfi.log"),
     ]
 )
+import platform
+import subprocess
 
 def run():
-    environ["QT_QPA_PLATFORM"] = "xcb"
-    environ["QT_QUICK_BACKEND"] = "software"
     
+    system = platform.system()
+    release = platform.uname().release.lower()
+
+    if system == "Linux" and "microsoft" in release:
+        # WSL
+        windows_host = subprocess.check_output("ip route show default | awk '{print $3}'", shell=True).decode().strip()
+        environ["DISPLAY"] = f"{windows_host}:0"
+    elif system == "Linux":
+        # native Linux - display already set
+        pass
+    elif system == "Darwin":
+        # macOS - nothing needed, Qt works natively
+        pass
+    elif system == "Windows":
+        # native Windows - nothing needed
+        pass
+    
+    environ["QT_SCALE_FACTOR_ROUNDING_POLICY"] = "PassThrough"
+    environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
+    environ["QT_QPA_PLATFORM"] = "xcb"
     app = QApplication(sys.argv)
-    app.setStyle('Fusion') #fixes linux painting issue?
     state = AppState()
     
     splash = SplashScreen("active")
