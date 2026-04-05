@@ -72,8 +72,7 @@ def main(run_config: RunConfig = None):
     log.info(f"Airy check flagged {len(results)} position points")
 
     analyser = WindowAnalyser(results, run_config.time_begin, run_config.time_end)
-    log.info(analyser.summary(gap_tolerance_seconds=run_config.gap_tolerance_seconds)) #gui will want this later, refactor from log
-
+    log.info(analyser.clean_stretches_summary(gap_tolerance_seconds=run_config.gap_tolerance_seconds))
     #write CSV
     output_dir = Path("outputs")
     output_dir.mkdir(exist_ok=True)

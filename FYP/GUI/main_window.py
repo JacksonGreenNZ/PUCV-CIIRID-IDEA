@@ -116,15 +116,15 @@ class MainWindow(QMainWindow):
         if self._state.target:
             self.targ_btn.setText(f"Target Selection\n{self._state.target.name}")
         if self._state.window:
-            start, end = self._state.window
+            start, end, _ = self._state.window
             self.win_btn.setText(f"Window Selection\n{start} → {end}")
 
     def _on_analysis_done(self, results):
-        """Enable exports and populate result tabs once analysis finishes."""
         self.export_csv_btn.setEnabled(True)
         self.export_video_btn.setEnabled(True)
-        self.clean_stretches_view.setPlainText(results.clean_stretches_text)
-        self.linked_groups_view.setPlainText(results.linked_groups_text)
+        gap = self._state.window[2]
+        self.clean_stretches_view.setPlainText(results.analyser.clean_stretches_summary(gap))
+        self.linked_groups_view.setPlainText(results.analyser.linked_groups_summary(gap))
 
     # --- Slots ---
 

@@ -97,29 +97,28 @@ class WindowAnalyser:
         groups.append(current_group)
         return sorted(groups, key=lambda g: g.total_clean_seconds, reverse=True)
 
-    def summary(self, gap_tolerance_seconds: int = 30) -> str:
+    def clean_stretches_summary(self, gap_tolerance_seconds: int = 30) -> str:
         stretches = self.clean_stretches()
-        groups = self.linked_groups(gap_tolerance_seconds)
-        lines = []
-
-        lines.append("\n=== Clean Stretches ===")
+        lines = ["=== Clean Stretches ==="]
         if not stretches:
             lines.append("  No clean stretches found.")
         else:
             for i, s in enumerate(stretches, 1):
                 lines.append(f"  {i}. {s.start.strftime('%H:%M:%S')} - "
-                              f"{s.end.strftime('%H:%M:%S')}  "
-                              f"({s.duration_seconds}s)")
+                            f"{s.end.strftime('%H:%M:%S')}  "
+                            f"({s.duration_seconds}s)")
+        return "\n".join(lines)
 
-        lines.append(f"\n=== Linked Groups (gap tolerance: {gap_tolerance_seconds}s) ===")
+    def linked_groups_summary(self, gap_tolerance_seconds: int = 30) -> str:
+        groups = self.linked_groups(gap_tolerance_seconds)
+        lines = [f"=== Linked Groups (gap tolerance: {gap_tolerance_seconds}s) ==="]
         if not groups:
             lines.append("  No groups found.")
         else:
             for i, g in enumerate(groups, 1):
                 gap_str = f", gaps: {g.gaps_seconds}" if g.gaps_seconds else ""
                 lines.append(f"  Group {i}: {g.start.strftime('%H:%M:%S')} - "
-                              f"{g.end.strftime('%H:%M:%S')}  "
-                              f"(clean: {g.total_clean_seconds}s, "
-                              f"span: {g.total_span_seconds}s{gap_str})")
-
+                            f"{g.end.strftime('%H:%M:%S')}  "
+                            f"(clean: {g.total_clean_seconds}s, "
+                            f"span: {g.total_span_seconds}s{gap_str})")
         return "\n".join(lines)

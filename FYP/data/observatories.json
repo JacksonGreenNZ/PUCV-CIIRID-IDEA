@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Warkworth",
+    "latitude": -36.0,
+    "longitude": -174.0,
+    "elevation_m": 0.0,
+    "dish_diameter_m": 30.0,
+    "frequency_hz": 1000000000.0
+  }
+]
