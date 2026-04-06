@@ -1,3 +1,6 @@
+import multiprocessing
+multiprocessing.freeze_support()
+
 import sys
 import logging
 import platform

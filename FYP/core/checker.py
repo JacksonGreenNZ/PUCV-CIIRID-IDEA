@@ -22,14 +22,13 @@ class InterferenceChecker:
         for event in interference_events:
             for pt in event.positions:
                 target_alt, target_az = self.observer.get_target_position(pt.time)
-                
                 ang_sep = Observer.angular_separation(
                     pt.position.altitude, pt.position.azimuth,
                     target_alt, target_az
                 )
-                
+                if self.beam_model.bypass and ang_sep > self.beam_model.prefilter_radius_deg:
+                    continue
                 gain_percent = self.beam_model.interference_gain(ang_sep)
-
                 if gain_percent is not None:
                     results.append({
                         "time_utc":        pt.time.isoformat(),
@@ -41,5 +40,4 @@ class InterferenceChecker:
                         "angular_sep_deg": ang_sep,
                         "gain_percent":    gain_percent
                     })
-
         return results

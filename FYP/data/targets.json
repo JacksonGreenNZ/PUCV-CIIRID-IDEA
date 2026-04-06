@@ -14,5 +14,13 @@
     "azimuth_deg": 10.0,
     "altitude_deg": 10.0,
     "is_static": true
+  },
+  {
+    "name": "12GHz Spike Location",
+    "ra_hours": null,
+    "dec_degrees": null,
+    "azimuth_deg": 240.0,
+    "altitude_deg": 0.0,
+    "is_static": true
   }
 ]

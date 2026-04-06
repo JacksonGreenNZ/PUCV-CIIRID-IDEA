@@ -20,5 +20,16 @@
     "gain_cutoff_percent": 3.0,
     "bypass_airy": true,
     "manual_beamwidth_deg": 3.0
+  },
+  {
+    "name": "La Serena",
+    "latitude": -29.619,
+    "longitude": -70.77,
+    "elevation_m": 2000.0,
+    "dish_diameter_m": 30.0,
+    "frequency_hz": 1000000000.0,
+    "gain_cutoff_percent": 3.0,
+    "bypass_airy": true,
+    "manual_beamwidth_deg": 60.0
   }
 ]

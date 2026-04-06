@@ -3,6 +3,9 @@ from PyQt6.QtCore import QThread, pyqtSignal
 from pathlib import Path
 from datetime import datetime
 
+import matplotlib
+matplotlib.use('Agg')  #non-interactive backend, no GUI windows
+
 from core.run_config import RunConfig
 from models.beam_model import BeamModel
 from core.observer import Observer

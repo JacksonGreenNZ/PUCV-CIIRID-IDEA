@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  #non-interactive backend, no GUI windows
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from collections import defaultdict
