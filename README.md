@@ -1,58 +1,91 @@
-# Satellite Interference Tracking System (WIP)
+# Satellite RFI Predictor
 
-### Observation Parameters
-- **Location** (LAT/LON/ELEVATION)
-- **Target** (RA/DEC)
-- **Observation Start/End Time**
-- **Dish Diameter**
-- **Frequency**
-- **Window Gap Tolerance**
-- **Gain Cutoff Percentage**
-- **Satellite Catalogue**
+A desktop application for predicting radio frequency interference (RFI) from satellite constellations during radio astronomy observations. Given an observatory location, observation target, and time window, it identifies clean stretches of time where no satellites pass through the telescope beam.
 
-Set in config.py file.
+---
 
-### Data Sources
-- **Planetary Ephemeris:** `de421.bsp`
-- **Satellite Orbital Elements:** Retrieved from CelesTrak in .tle format.
+## Features
 
-### Computational Approach
-1. **Data Acquisition**
-   - TLE satellite catalogue downloaded from Celestrak and cached locally (refreshed if older than 7 days).
-   - Observer location and target coordinates loaded from configuration.
+- **Observatory configuration** — latitude, longitude, elevation, dish diameter, frequency, gain cutoff
+- **Target selection** — celestial tracking (RA/Dec) or fixed pointing (Az/Alt)
+- **Flexible beam modelling** — Airy diffraction pattern or manual beamwidth
+- **Satellite pre-filtering** — via SOPP, using the computed Airy radius as the search cone
+- **Clean stretch analysis** — identifies contiguous interference-free periods, linked across configurable gaps
+- **CSV export** — per-event interference data with timestamp, satellite, angular separation, and gain
+- **Sky animation** — dual-hemisphere visualisation of satellite trajectories and target track
 
-2. **Beam Modelling**
-   - Telescope beam modelled as an Airy diffraction pattern: G(θ) = [2J₁(πD sinθ/λ) / (πD sinθ/λ)]²
-   - Airy radius computed from dish diameter and observing frequency to define the pre-filter search cone.
+---
 
-3. **Precomputation of Positions**
-   - Target altitude/azimuth precomputed at 1-second resolution across the observation window using Skyfield.
+## Computational Approach
 
-4. **Satellite Pre-filtering**
-   - SOPP propagates all catalogue satellites and returns only those passing within the Airy search cone.
+### 1. TLE Acquisition
+Satellite orbital elements are downloaded from [CelesTrak](https://celestrak.org/NORAD/elements/) and cached locally, refreshed automatically if older than 7 days.
 
-5. **Interference Detection**
-   - Angular separation between each candidate satellite and the target computed via the haversine formula at each timestep.
-   - Separation converted to fractional beam gain via the Airy pattern; timesteps exceeding the gain threshold are flagged.
+### 2. Beam Modelling
+The telescope beam is modelled as an Airy diffraction pattern:
 
-6. **Clean Stretch Analysis**
-   - Flagged timestamps used to identify contiguous clean periods within the observation window.
-   - Clean stretches linked across short gaps (configurable tolerance) to produce ranked usable observing blocks.
+$$G(\theta) = \left[\frac{2J_1(\pi D \sin\theta / \lambda)}{\pi D \sin\theta / \lambda}\right]^2$$
 
-7. **Output Generation**
-   - Interference events written to CSV (timestamp, satellite name, angular separation, gain percentage).
-   - Dual-hemisphere sky animation rendered showing satellite trajectories and target track.
+The outermost angle at which gain exceeds the configured cutoff threshold defines the pre-filter search radius passed to SOPP.
 
-## Output Formats
-### CSV Report
-- Naming convention: `sat_intersect_YYYY-MM-DD_HH-MM-SS.csv`, `sky_plot_YYYY-MM-DD_HH-MM-SS.mp4`
-- Provides tabular data on satellite interference events.
+Alternatively, a manual beamwidth can be specified directly, bypassing the Airy model entirely.
 
-### Visualisation
-- Plots represent:
-  - Satellite and target on observer sky.
-  - Satellite positions relative to target.
+### 3. Target Position Precomputation
+Target altitude and azimuth are precomputed at 1-second resolution across the observation window using [Skyfield](https://rhodesmill.org/skyfield/) and the DE421 planetary ephemeris. For fixed pointing, the az/alt is held constant.
 
-## Applications
-This system is applicable for astronomical observation planning and astrophotography scheduling in optical and radio astronomy.
+### 4. Satellite Pre-filtering (SOPP)
+[SOPP](https://github.com/niwcpac/sopp) propagates all catalogue satellites and returns only those passing within the pre-filter cone during the observation window.
 
+### 5. Interference Detection
+For each candidate satellite position, angular separation from the target is computed via the haversine formula. Separation is converted to fractional beam gain via the Airy pattern; timesteps exceeding the gain threshold are flagged.
+
+### 6. Clean Stretch Analysis
+Flagged timestamps are used to identify contiguous clean periods. Clean stretches within a configurable gap tolerance are linked into ranked usable observing blocks.
+
+---
+
+## Output
+
+| Format | Description |
+|---|---|
+| CSV | Per-event data: timestamp, satellite name, positions, angular separation, gain percentage |
+| MP4 | Dual-hemisphere sky animation: full sky view and beam-centred relative view |
+
+Files are saved to the `outputs/` directory with timestamp-based naming:
+- `sat_intersect_YYYY-MM-DD_HH-MM-SS.csv`
+- `sky_plot_YYYY-MM-DD_HH-MM-SS.mp4`
+
+---
+
+## Data Sources
+
+| Source | Usage |
+|---|---|
+| [CelesTrak](https://celestrak.org/NORAD/elements/) | Satellite TLE catalogues |
+| [DE421](https://rhodesmill.org/skyfield/planets.html) | Planetary ephemeris for target position computation |
+
+---
+
+## Platform Support
+
+| Platform | Status |
+|---|---|
+| Linux | Supported |
+| Windows (WSL) | Supported |
+| Windows (native) | In progress |
+| macOS | In progress |
+
+---
+
+## Testing
+```bash
+pytest tests/ -v
+```
+
+Unit tests cover beam modelling, angular separation, window analysis, interference detection, and application state. Integration testing (SOPP, Skyfield, Celestrak) is performed manually.
+
+---
+
+## Acknowledgements
+
+Developed in collaboration with the the physics department at PUCV.
