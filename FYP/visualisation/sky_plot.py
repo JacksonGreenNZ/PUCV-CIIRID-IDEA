@@ -4,7 +4,6 @@ import matplotlib.animation as animation
 from collections import defaultdict
 from models.beam_model import BeamModel
 from core.observer import Observer
-from config import GAIN_CUTOFF_PERCENT
 import logging
 log = logging.getLogger(__name__)
 
@@ -19,6 +18,7 @@ class SkyPlot:
         self.observer = observer
         self.results = results
         self.plot_radius = beam_model.prefilter_radius_deg * 1.5
+        self.gain_cutoff_percent = beam_model.threshold * 100
         self._organise_by_time()
         self._prepare_target_track()
 
@@ -56,7 +56,7 @@ class SkyPlot:
         r = np.degrees(np.arccos(np.clip(cos_sep, -1, 1)))
         return theta, r
 
-    def animate(self, save_path=None):
+    def animate(self, save_path=None, progress_callback=None):
         """
         Renders dual animated hemisphere projection.
         Optionally saves to file if save_path is provided.
@@ -112,7 +112,7 @@ class SkyPlot:
         ax_rel.plot(boundary_theta,
                     np.full_like(boundary_theta, self.beam_model.prefilter_radius_deg / 1.5),
                     color='red', linestyle=':', linewidth=1,
-                    label=f'{GAIN_CUTOFF_PERCENT}% gain threshold')
+                    label=f'{self.gain_cutoff_percent}% gain threshold')
 
         # target locked at centre
         ax_rel.plot(0, 0, 'g*', markersize=12, label='Target')
@@ -224,7 +224,8 @@ class SkyPlot:
         plt.tight_layout()
 
         if save_path:
-            anim.save(save_path, writer='ffmpeg', fps=10, dpi=150)
+            anim.save(save_path, writer='ffmpeg', fps=10, dpi=150, 
+                  progress_callback=progress_callback)
             log.info(f"Animation saved to {save_path}")
         else:
             plt.show()

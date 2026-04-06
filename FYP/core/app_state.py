@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 from core.run_config import RunConfig
 from core.analysis_thread import AnalysisThread
+from core.analysis_thread import AnalysisThread, VideoExportThread
 
 log = logging.getLogger(__name__)
 
@@ -58,6 +59,7 @@ class AppState(QObject):
         self.window: Optional[tuple[str, str, int]] = None
         self._results: Optional[AnalysisResults] = None
         self._thread: Optional[AnalysisThread] = None
+        self._video_thread = None
 
     def set_tle_file(self, tle_file: str):
         self.tle_file = tle_file
@@ -139,8 +141,13 @@ class AppState(QObject):
         path, _ = QFileDialog.getSaveFileName(None, "Export Video", default, "Video Files (*.mp4)")
         if not path:
             return
-        self.log_message.emit("Saving video — this may take a while...")
-        from visualisation.sky_plot import SkyPlot
-        plot = SkyPlot(self._results.beam_model, self._results.observer, self._results.results)
-        plot.animate(save_path=path)
-        self.log_message.emit(f"Video saved to {path}")
+        self._video_thread = VideoExportThread(
+            self._results.beam_model,
+            self._results.observer,
+            self._results.results,
+            path
+        )
+        self._video_thread.log_message.connect(self.log_message)
+        self._video_thread.finished.connect(lambda: self.log_message.emit("Export complete."))
+        self._video_thread.failed.connect(lambda e: self.log_message.emit(f"ERROR: {e}"))
+        self._video_thread.start()

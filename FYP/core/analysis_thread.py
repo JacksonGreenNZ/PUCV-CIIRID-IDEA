@@ -40,9 +40,9 @@ class AnalysisThread(QThread):
         
         try:
             log = logging.getLogger(__name__)
-            log.info(f"dish={self._run_config.dish_diameter_m}")
-            log.info(f"freq={self._run_config.frequency_hz}")
-            log.info(f"Bypass Airy={self._run_config.bypass_airy}")
+            log.info(f"Dish Size={self._run_config.dish_diameter_m}m")
+            log.info(f"Frequency={self._run_config.frequency_hz/1e6}MHz")
+            log.info(f"Main Beam Only? {self._run_config.bypass_airy}")
             observer = Observer(
                 latitude=self._run_config.latitude,
                 longitude=self._run_config.longitude,
@@ -86,3 +86,30 @@ class AnalysisThread(QThread):
             self.failed.emit(str(e))
         finally:
             root_logger.removeHandler(handler)
+            
+class VideoExportThread(QThread):
+    log_message = pyqtSignal(str)
+    finished = pyqtSignal()
+    failed = pyqtSignal(str)
+
+    def __init__(self, beam_model, observer, results, save_path: str):
+        super().__init__()
+        self._beam_model = beam_model
+        self._observer = observer
+        self._results = results
+        self._save_path = save_path
+
+    def run(self):
+        try:
+            from visualisation.sky_plot import SkyPlot
+            self.log_message.emit("Rendering animation — this may take a while...")
+            plot = SkyPlot(self._beam_model, self._observer, self._results)
+            def progress_callback(current_frame, total_frames):
+                if total_frames > 0 and current_frame % max(1, total_frames // 10) == 0:
+                    pct = int(current_frame / total_frames * 100)
+                    self.log_message.emit(f"Rendering video... {pct}%")
+            plot.animate(save_path=self._save_path, progress_callback=progress_callback)
+            self.log_message.emit(f"Video saved to {self._save_path}")
+            self.finished.emit()
+        except Exception as e:
+            self.failed.emit(str(e))

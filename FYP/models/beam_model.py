@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.special import j1
 from scipy.optimize import brentq
-from config import DISH_DIAMETER_M, FREQUENCY_HZ, GAIN_CUTOFF_PERCENT
 
 class BeamModel:
     def __init__(self, dish_diameter_m: float, frequency_hz: float, gain_cutoff_percent: float = 3.0, bypass: bool = False):

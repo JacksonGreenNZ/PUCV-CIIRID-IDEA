@@ -1,5 +1,3 @@
-# core/window_analyser.py
-
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 

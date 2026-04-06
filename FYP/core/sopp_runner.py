@@ -2,13 +2,6 @@ from sopp.builder.configuration_builder import ConfigurationBuilder
 from sopp.sopp import Sopp
 from core.run_config import RunConfig
 from models.beam_model import BeamModel
-from config import (
-    LATITUDE, LONGITUDE, ELEVATION_M,
-    RA_HOURS, DEC_DEGREES,
-    TIME_BEGIN, TIME_END,
-    FREQUENCY_HZ,
-    CONCURRENCY_LEVEL, DATA_TYPE
-)
 import logging
 log = logging.getLogger(__name__)
 

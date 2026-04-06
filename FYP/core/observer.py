@@ -1,11 +1,6 @@
 import numpy as np
 from skyfield.api import load, wgs84, Star
 from datetime import datetime, timezone
-from config import (
-    LATITUDE, LONGITUDE, ELEVATION_M,
-    RA_HOURS, DEC_DEGREES,
-    TIME_BEGIN, TIME_END
-)
 from datetime import datetime, timezone
 
 class Observer:
