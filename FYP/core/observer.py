@@ -80,7 +80,8 @@ class Observer:
         idx = np.argmin(np.abs(self._time_array.tt - t.tt))
         return self._target_alts[idx], self._target_azs[idx]
 
-    def angular_separation(self, alt1, az1, alt2, az2):
+    @staticmethod
+    def angular_separation(alt1, az1, alt2, az2):
         """
         Haversine angular separation between two alt/az positions.
         All inputs in degrees, returns degrees.

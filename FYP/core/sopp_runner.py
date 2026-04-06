@@ -3,9 +3,8 @@ from sopp.sopp import Sopp
 from core.run_config import RunConfig
 from models.beam_model import BeamModel
 import logging
-import sys
 import os
-from pathlib import Path
+from enums.tle_group import TLEGroup
 
 log = logging.getLogger(__name__)
 from core.paths import get_base_dir
@@ -24,7 +23,7 @@ class SOPPRunner:
         self.config = self._build_config()
 
     @staticmethod
-    def select_data(group: str) -> str:
+    def select_data(group: TLEGroup | str) -> str:
         from skyfield.api import load
         max_days = 7.0
         data_dir.mkdir(exist_ok=True)  # ensure it exists

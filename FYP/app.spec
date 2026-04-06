@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('visualisation/spinner.gif', 'visualisation')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

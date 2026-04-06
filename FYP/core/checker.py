@@ -23,7 +23,7 @@ class InterferenceChecker:
             for pt in event.positions:
                 target_alt, target_az = self.observer.get_target_position(pt.time)
                 
-                ang_sep = self.observer.angular_separation(
+                ang_sep = Observer.angular_separation(
                     pt.position.altitude, pt.position.azimuth,
                     target_alt, target_az
                 )

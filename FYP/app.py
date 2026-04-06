@@ -1,61 +1,60 @@
 import sys
-from PyQt6.QtWidgets import QApplication
-from GUI.splash import SplashScreen
-from GUI.main_window import MainWindow
-from core.app_state import AppState
+import logging
+import platform
+import subprocess
 from os import environ
 from pathlib import Path
-Path("outputs").mkdir(exist_ok=True)
+
+from PyQt6.QtWidgets import QApplication
+
+from core.app_state import AppState
+from core.paths import get_base_dir
+from enums.tle_group import TLEGroup
+from GUI.splash import SplashScreen
+from GUI.main_window import MainWindow
+
+# --- Environment setup (must happen before QApplication) ---
 environ["QT_LOGGING_RULES"] = "qt.svg.draw=false"
-import logging
+environ["QT_SCALE_FACTOR_ROUNDING_POLICY"] = "PassThrough"
+environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
+environ["QT_QPA_PLATFORM"] = "xcb"
+
+system = platform.system()
+release = platform.uname().release.lower()
+if system == "Linux" and "microsoft" in release:
+    windows_host = subprocess.check_output(
+        "ip route show default | awk '{print $3}'", shell=True
+    ).decode().strip()
+    environ["DISPLAY"] = f"{windows_host}:0"
+
+# --- Directory and logging setup ---
+base = get_base_dir()
+Path(base / "outputs").mkdir(exist_ok=True)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("outputs/rfi.log"),
+        logging.FileHandler(base / "outputs" / "rfi.log"),
     ]
 )
-import platform
-import subprocess
 
-from core.paths import get_base_dir
-Path(get_base_dir() / "outputs").mkdir(exist_ok=True)
 
 def run():
-    
-    system = platform.system()
-    release = platform.uname().release.lower()
-
-    if system == "Linux" and "microsoft" in release:
-        # WSL
-        windows_host = subprocess.check_output("ip route show default | awk '{print $3}'", shell=True).decode().strip()
-        environ["DISPLAY"] = f"{windows_host}:0"
-    elif system == "Linux":
-        # native Linux - display already set
-        pass
-    elif system == "Darwin":
-        # macOS - nothing needed, Qt works natively
-        pass
-    elif system == "Windows":
-        # native Windows - nothing needed
-        pass
-    
-    environ["QT_SCALE_FACTOR_ROUNDING_POLICY"] = "PassThrough"
-    environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
-    environ["QT_QPA_PLATFORM"] = "xcb"
     app = QApplication(sys.argv)
     state = AppState()
-    
-    splash = SplashScreen("active")
-    splash.exec()  #blocks until accept()
-    
-    state.set_tle_file(splash.tle_file)  #grab result directly after exec
-    
+
+    splash = SplashScreen(TLEGroup.ACTIVE)
+    splash.exec()
+
+    state.set_tle_file(TLEGroup.ACTIVE)
+
     window = MainWindow(state)
     window.show()
-    
+
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     run()
