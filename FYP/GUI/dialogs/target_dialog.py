@@ -83,7 +83,6 @@ class TargetDialog(QDialog):
         ra_row.addStretch()
         dec_row = QHBoxLayout()
         self._dec_sign = QPushButton("+")
-        self._dec_sign.setFixedWidth(32)
         self._dec_sign.setCheckable(True)
         self._dec_sign.clicked.connect(self._toggle_dec_sign)
         self._dec_d = self._int_spin(0, 90, suffix="°")
@@ -141,7 +140,6 @@ class TargetDialog(QDialog):
         spin = QSpinBox()
         spin.setRange(min_val, max_val)
         spin.setSuffix(suffix)
-        spin.setFixedWidth(72)
         return spin
 
     def _float_spin(self, min_val, max_val, suffix="") -> QDoubleSpinBox:
@@ -149,7 +147,6 @@ class TargetDialog(QDialog):
         spin.setRange(min_val, max_val)
         spin.setDecimals(2)
         spin.setSuffix(suffix)
-        spin.setFixedWidth(88)
         return spin
 
     def _coord_spin(self, min_val, max_val, suffix="") -> QDoubleSpinBox:

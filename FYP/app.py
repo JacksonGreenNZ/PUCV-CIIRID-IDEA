@@ -17,7 +17,6 @@ from GUI.main_window import MainWindow
 environ["QT_LOGGING_RULES"] = "qt.svg.draw=false"
 environ["QT_SCALE_FACTOR_ROUNDING_POLICY"] = "PassThrough"
 environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
-environ["QT_QPA_PLATFORM"] = "xcb"
 
 system = platform.system()
 release = platform.uname().release.lower()
@@ -26,6 +25,9 @@ if system == "Linux" and "microsoft" in release:
         "ip route show default | awk '{print $3}'", shell=True
     ).decode().strip()
     environ["DISPLAY"] = f"{windows_host}:0"
+    environ["QT_QPA_PLATFORM"] = "xcb"
+elif system == "Linux":
+    environ["QT_QPA_PLATFORM"] = "xcb"
 
 # --- Directory and logging setup ---
 base = get_base_dir()
@@ -48,7 +50,7 @@ def run():
     splash = SplashScreen(TLEGroup.ACTIVE)
     splash.exec()
 
-    state.set_tle_file(TLEGroup.ACTIVE)
+    state.set_tle_file(splash.tle_file)
 
     window = MainWindow(state)
     window.show()
