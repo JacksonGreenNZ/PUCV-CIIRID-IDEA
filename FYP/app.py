@@ -19,6 +19,9 @@ logging.basicConfig(
 import platform
 import subprocess
 
+from core.paths import get_base_dir
+Path(get_base_dir() / "outputs").mkdir(exist_ok=True)
+
 def run():
     
     system = platform.system()

@@ -3,7 +3,14 @@ from sopp.sopp import Sopp
 from core.run_config import RunConfig
 from models.beam_model import BeamModel
 import logging
+import sys
+import os
+from pathlib import Path
+
 log = logging.getLogger(__name__)
+from core.paths import get_base_dir
+data_dir = get_base_dir() / "data"
+data_dir.mkdir(exist_ok=True)
 
 class SOPPRunner:
     """
@@ -18,17 +25,17 @@ class SOPPRunner:
 
     @staticmethod
     def select_data(group: str) -> str:
-        import os
         from skyfield.api import load
         max_days = 7.0
-        filename = f"data/{group}.tle"
+        data_dir.mkdir(exist_ok=True)  # ensure it exists
+        filename = str(data_dir / f"{group}.tle")
         url = f"https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=tle"
         if not os.path.exists(filename) or load.days_old(filename) >= max_days:
-            log.debug(f"Downloading TLEs for {group}...")
+            log.info(f"Downloading TLEs for {group}...")
             load.download(url, filename=filename)
-            log.debug("TLE catalogue updated.")
+            log.info("TLE catalogue updated.")
         else:
-            log.debug("TLE catalogue up to date.")
+            log.info("TLE catalogue up to date.")
         return filename
 
     def _build_config(self):

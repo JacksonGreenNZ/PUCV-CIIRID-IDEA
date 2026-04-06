@@ -9,6 +9,9 @@ from core.observer import Observer
 from core.checker import InterferenceChecker
 from core.sopp_runner import SOPPRunner
 from core.window_analyser import WindowAnalyser
+from core.paths import get_base_dir
+output_dir = get_base_dir() / "outputs"
+output_dir.mkdir(exist_ok=True)
 
 
 class QtLogHandler(logging.Handler):
@@ -76,8 +79,6 @@ class AnalysisThread(QThread):
                 self._run_config.time_begin,
                 self._run_config.time_end
             )
-            output_dir = Path("outputs")
-            output_dir.mkdir(exist_ok=True)
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             log.info("Analysis complete.")
             self.finished.emit(beam_model, observer, results, output_dir, timestamp, analyser)

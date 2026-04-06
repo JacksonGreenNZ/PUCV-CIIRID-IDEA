@@ -3,6 +3,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QMovie
 from PyQt6.QtCore import QSize
 from core.tle_loader import TLELoaderThread
+from core.paths import get_asset_path
 
 
 class SplashScreen(QDialog):
@@ -40,7 +41,7 @@ class SplashScreen(QDialog):
         self._thread.finished.connect(self._on_thread_done)
         self._thread.start()
         self._spinner = QLabel()
-        self._movie = QMovie("visualisation/spinner.gif")
+        self._movie = QMovie(get_asset_path("visualisation/spinner.gif"))        
         self._spinner.setMovie(self._movie)
         self._movie.setScaledSize(QSize(32, 32))
         layout.addWidget(self._spinner, alignment=Qt.AlignmentFlag.AlignCenter)
