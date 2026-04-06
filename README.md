@@ -72,7 +72,7 @@ Files are saved to the `outputs/` directory with timestamp-based naming:
 |---|---|
 | Linux | Supported |
 | Windows (WSL) | Supported |
-| Windows (native) | In progress |
+| Windows (native) | Supported |
 | macOS | In progress |
 
 ---
