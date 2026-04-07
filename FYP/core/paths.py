@@ -2,10 +2,9 @@ import sys
 from pathlib import Path
 
 def get_base_dir() -> Path:
-    """Returns the base directory for data files — 
-    next to the executable when packaged, repo root when running from source."""
     if getattr(sys, 'frozen', False):
-        return Path(sys.executable).parent
+        # installed app — use user's home directory
+        return Path.home() / ".clearskyrfi"
     return Path(__file__).parent.parent
 
 def get_asset_path(relative_path: str) -> str:
