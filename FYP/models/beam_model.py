@@ -5,7 +5,7 @@ from scipy.optimize import brentq
 class BeamModel:
     def __init__(self, dish_diameter_m: float, frequency_hz: float, gain_cutoff_percent: float = 3.0, bypass: bool = False):
         self.diameter = dish_diameter_m
-        self.wavelength = 3e8 / frequency_hz
+        self.wavelength = 3e8 / frequency_hz if frequency_hz != 0 else 0
         self.threshold = gain_cutoff_percent / 100.0
         self.bypass = bypass
         self.prefilter_radius_deg = 0.0 if bypass else self.compute_prefilter_radius()
@@ -16,7 +16,8 @@ class BeamModel:
         
         :param theta_deg: angular separation (deg)
         '''
-        
+        if self.wavelength == 0:
+            return 50 #extra handling just in case on bypass
         theta_rad = np.radians(theta_deg)
         x = np.pi * self.diameter * np.sin(theta_rad) / self.wavelength
         if np.isclose(x, 0):

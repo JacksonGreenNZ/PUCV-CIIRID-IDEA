@@ -27,6 +27,10 @@ class ObservatoryDialog(QDialog):
         self._dish_spin.setEnabled(not checked)
         self._gain_spin.setEnabled(not checked)
         self._freq_spin.setEnabled(not checked)
+        if checked:
+            self._dish_spin.setValue(0)
+            self._freq_spin.setValue(0)
+            self._gain_spin.setValue(50)
         self.update()
 
 
