@@ -105,13 +105,23 @@ class VideoExportThread(QThread):
 
     def run(self):
         try:
+            import shutil
+            if not shutil.which("ffmpeg"):
+                self.failed.emit(
+                    "ffmpeg not found. Please install ffmpeg and ensure it is on your PATH.\n"
+                    "Download from https://ffmpeg.org/download.html"
+                )
+                return
+
             from visualisation.sky_plot import SkyPlot
             self.log_message.emit("Rendering animation — this may take a while...")
             plot = SkyPlot(self._beam_model, self._observer, self._results)
+
             def progress_callback(current_frame, total_frames):
                 if total_frames > 0 and current_frame % max(1, total_frames // 10) == 0:
                     pct = int(current_frame / total_frames * 100)
                     self.log_message.emit(f"Rendering video... {pct}%")
+
             plot.animate(save_path=self._save_path, progress_callback=progress_callback)
             self.log_message.emit(f"Video saved to {self._save_path}")
             self.finished.emit()

@@ -30,7 +30,7 @@ class ObservatoryDialog(QDialog):
         if checked:
             self._dish_spin.setValue(0)
             self._freq_spin.setValue(0)
-            self._gain_spin.setValue(50)
+            self._gain_spin.setValue(50)#beamwidth is fwhm, for user clarity
         self.update()
 
 
