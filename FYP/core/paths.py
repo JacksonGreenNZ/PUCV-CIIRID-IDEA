@@ -1,15 +1,32 @@
-import sys
 from pathlib import Path
+import sys
+
+
+def is_frozen() -> bool:
+    return getattr(sys, "frozen", False)
+
 
 def get_base_dir() -> Path:
-    if getattr(sys, 'frozen', False):
-        # installed app — use user's home directory
-        return Path.home() / ".clearskyrfi"
-    return Path(__file__).parent.parent
+    if is_frozen():
+        base = Path.home() / ".clearskyrfi"
+    else:
+        base = Path(__file__).resolve().parent.parent
+
+    base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
+def get_data_dir() -> Path:
+    path = get_base_dir() / "data"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def get_asset_base() -> Path:
+    if is_frozen():
+        return Path(sys._MEIPASS)
+    return Path(__file__).resolve().parent.parent
+
 
 def get_asset_path(relative_path: str) -> str:
-    if getattr(sys, 'frozen', False):
-        base = Path(sys._MEIPASS)
-    else:
-        base = get_base_dir()
-    return str(base / relative_path)
+    return str(get_asset_base() / relative_path)
