@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 import sys
 
@@ -30,3 +31,16 @@ def get_asset_base() -> Path:
 
 def get_asset_path(relative_path: str) -> str:
     return str(get_asset_base() / relative_path)
+
+def get_ffmpeg():
+    # 1. bundled (Windows installer case)
+    local = Path(sys.executable).parent / "ffmpeg" / "bin" / "ffmpeg.exe"
+    if local.exists():
+        return str(local)
+
+    # 2. system install (Linux/macOS)
+    system = shutil.which("ffmpeg")
+    if system:
+        return system
+
+    raise RuntimeError("FFmpeg not found")
