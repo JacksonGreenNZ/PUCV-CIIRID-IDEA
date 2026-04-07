@@ -26,13 +26,22 @@ class SOPPRunner:
     def select_data(group: TLEGroup | str) -> str:
         from skyfield.api import load
         max_days = 7.0
-        data_dir.mkdir(exist_ok=True)  # ensure it exists
+        data_dir.mkdir(exist_ok=True)
         filename = str(data_dir / f"{group}.tle")
         url = f"https://celestrak.org/NORAD/elements/gp.php?GROUP={group}&FORMAT=tle"
         if not os.path.exists(filename) or load.days_old(filename) >= max_days:
             log.info(f"Downloading TLEs for {group}...")
-            load.download(url, filename=filename)
-            log.info("TLE catalogue updated.")
+            try:
+                load.download(url, filename=filename)
+                log.info("TLE catalogue updated.")
+            except Exception as e:
+                if os.path.exists(filename):
+                    log.warning(f"TLE download failed ({e}) — using cached file.")
+                else:
+                    raise RuntimeError(
+                        f"TLE download failed and no cached file exists for '{group}'.\n"
+                        f"Please check your internet connection or manually place a TLE file at:\n{filename}"
+                    ) from e
         else:
             log.info("TLE catalogue up to date.")
         return filename
