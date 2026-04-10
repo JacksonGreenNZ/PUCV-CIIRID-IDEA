@@ -7,6 +7,7 @@ from models.beam_model import BeamModel
 from core.observer import Observer
 import logging
 log = logging.getLogger(__name__)
+from core.runtime_dependencies import get_ffmpeg_path
 
 class SkyPlot:
     """
@@ -214,6 +215,8 @@ class SkyPlot:
             time_text.set_text(f'UTC: {time_key}')
             return [sat_scatter_rel, sat_scatter_sky, target_marker_sky, time_text] + annotations
 
+        matplotlib.rcParams['animation.ffmpeg_path'] = get_ffmpeg_path()
+        
         anim = animation.FuncAnimation(
             fig,
             update,
