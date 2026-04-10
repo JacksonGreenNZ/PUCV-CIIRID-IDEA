@@ -24,9 +24,8 @@ environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "0"
 system = platform.system()
 release = platform.uname().release.lower()
 if system == "Linux" and "microsoft" in release:
-    windows_host = subprocess.check_output(
-        "ip route show default | awk '{print $3}'", shell=True
-    ).decode().strip()
+    route_output = subprocess.check_output(["ip", "route", "show", "default"])
+    windows_host = route_output.decode().split()[2]
     environ["DISPLAY"] = f"{windows_host}:0"
     environ["QT_QPA_PLATFORM"] = "xcb"
 elif system == "Linux":

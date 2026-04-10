@@ -5,9 +5,7 @@ from PyQt6.QtCore import QObject, pyqtSignal
 from dataclasses import dataclass
 from typing import Optional
 from pathlib import Path
-from typing import Optional
 from core.run_config import RunConfig
-from core.analysis_thread import AnalysisThread
 from core.analysis_thread import AnalysisThread, VideoExportThread
 
 log = logging.getLogger(__name__)
@@ -87,7 +85,7 @@ class AppState(QObject):
             bypass_airy=self.observatory.bypass_airy,
             manual_beamwidth_deg=self.observatory.manual_beamwidth_deg,
             concurrency_level=os.cpu_count(),
-            data_type="starlink",
+            data_type="active",
         )
 
     def run_analysis(self):

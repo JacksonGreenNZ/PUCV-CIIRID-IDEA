@@ -90,6 +90,12 @@ class SOPPRunner:
         """
         Runs the SOPP engine and returns raw interference events.
         """
-        engine = Sopp(self.config)
-        log.info(f"Running SOPP for {len(self.config.satellites)} satellites...")
-        return engine.get_satellites_crossing_main_beam()
+        try:
+            engine = Sopp(self.config)
+            log.info(f"Running SOPP for {len(self.config.satellites)} satellites...")
+            return engine.get_satellites_crossing_main_beam()
+        except Exception as e:
+            raise RuntimeError(
+                f"SOPP engine failed: {e}\n"
+                f"Check that the TLE file is valid and the observation window is correctly set."
+            ) from e

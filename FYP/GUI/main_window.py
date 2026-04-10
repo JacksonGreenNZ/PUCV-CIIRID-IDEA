@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QTabWidget, QTextEdit
+    QPushButton, QLabel, QTabWidget, QTextEdit, QMessageBox
 )
 from PyQt6.QtGui import QFont
 
@@ -26,6 +26,7 @@ class MainWindow(QMainWindow):
         self._state.state_changed.connect(self._refresh_ui)
         self._state.log_message.connect(self.log_view.append)
         self._state.analysis_complete.connect(self._on_analysis_done)
+        self._state.analysis_failed.connect(self._on_analysis_failed)
 
     def _build_ui(self):
         central = QWidget()
@@ -138,6 +139,9 @@ class MainWindow(QMainWindow):
         self.clean_stretches_view.setPlainText(results.analyser.clean_stretches_summary(gap))
         self.linked_groups_view.setPlainText(results.analyser.linked_groups_summary(gap))
 
+    def _on_analysis_failed(self, error: str):
+        QMessageBox.critical(self, "Analysis Failed", error)
+
     # --- Slots ---
 
     def _select_observatory(self):
@@ -170,7 +174,6 @@ class MainWindow(QMainWindow):
     def _reset_state(self):
         self._state.observatory = None
         self._state.target = None
-        self._state.window = None
         self._state.window = None
         self._results = None
         self.obs_btn.setText("Observatory Selection\nNone Selected")
