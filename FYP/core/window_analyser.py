@@ -45,30 +45,35 @@ class WindowAnalyser:
         self.time_end = datetime.fromisoformat(time_end).replace(tzinfo=timezone.utc)
 
     def clean_stretches(self) -> list[CleanStretch]:
-        stretches = []
-        current_start = None
-        t = self.time_begin
+        if not self.flagged:
+            duration = int((self.time_end - self.time_begin).total_seconds())
+            return [CleanStretch(start=self.time_begin, end=self.time_end, duration_seconds=duration)]
 
-        while t <= self.time_end:
-            if t not in self.flagged:
-                if current_start is None:
-                    current_start = t
+        # Merge flagged timestamps into contiguous interference blocks
+        sorted_flagged = sorted(self.flagged)
+        blocks: list[tuple[datetime, datetime]] = []
+        block_start = block_end = sorted_flagged[0]
+        for t in sorted_flagged[1:]:
+            if t - block_end <= timedelta(seconds=1):
+                block_end = t
             else:
-                if current_start is not None:
-                    stretches.append(CleanStretch(
-                        start=current_start,
-                        end=t - timedelta(seconds=1),
-                        duration_seconds=int((t - current_start).total_seconds())
-                    ))
-                    current_start = None
-            t += timedelta(seconds=1)
+                blocks.append((block_start, block_end))
+                block_start = block_end = t
+        blocks.append((block_start, block_end))
 
-        if current_start is not None:
-            stretches.append(CleanStretch(
-                start=current_start,
-                end=self.time_end,
-                duration_seconds=int((self.time_end - current_start).total_seconds())
-            ))
+        # Clean stretches are the gaps before, between, and after interference blocks
+        gap_candidates = [
+            (self.time_begin,                          blocks[0][0] - timedelta(seconds=1)),
+            *((blocks[i][1] + timedelta(seconds=1),    blocks[i + 1][0] - timedelta(seconds=1))
+              for i in range(len(blocks) - 1)),
+            (blocks[-1][1] + timedelta(seconds=1),     self.time_end),
+        ]
+        stretches = [
+            CleanStretch(start=start, end=end,
+                         duration_seconds=int((end - start).total_seconds()))
+            for start, end in gap_candidates
+            if start <= end
+        ]
 
         return sorted(stretches, key=lambda s: s.duration_seconds, reverse=True)
 
