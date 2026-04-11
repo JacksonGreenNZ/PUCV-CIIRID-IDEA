@@ -6,6 +6,21 @@ class Observer:
     """
     Wraps skyfield setup, precomputes target positions across observation window,
     and provides angular separation via haversine.
+
+    On construction, the full observation window is sampled at 1-second
+    resolution and target alt/az positions are stored as numpy arrays for fast
+    lookup during interference checking. Supply either RA/Dec (tracking target)
+    or Az/Alt (fixed pointing), not both.
+
+    :param latitude: Observatory latitude in decimal degrees (positive = North).
+    :param longitude: Observatory longitude in decimal degrees (positive = East).
+    :param elevation_m: Observatory elevation above sea level in metres.
+    :param time_begin: ISO 8601 UTC start of the observation window.
+    :param time_end: ISO 8601 UTC end of the observation window.
+    :param ra_hours: Right ascension of the tracking target in hours.
+    :param dec_degrees: Declination of the tracking target in degrees.
+    :param azimuth_deg: Fixed azimuth for static pointings in degrees.
+    :param altitude_deg: Fixed altitude for static pointings in degrees.
     """
     def __init__(self, latitude: float, longitude: float, elevation_m: float,
                  time_begin: str, time_end: str,
@@ -65,11 +80,16 @@ class Observer:
         """Full precomputed time array as skyfield time object."""
         return self._time_array
 
-    def get_target_position(self, sat_time):
+    def get_target_position(self, sat_time) -> tuple[float, float]:
         """
-        returns precomputed target (alt, az) in degrees closest to the given SOPP timestamp.
+        Return the precomputed target (alt, az) in degrees nearest to a SOPP event timestamp.
 
-        :param sat_time: SOPP position time object
+        Finds the closest index in the precomputed time array using argmin on
+        the difference in Terrestrial Time (TT), then returns the corresponding
+        altitude and azimuth from the precomputed arrays.
+
+        :param sat_time: SOPP position time object with year/month/day/hour/minute/second/microsecond.
+        :returns: Tuple of (altitude_deg, azimuth_deg).
         """
         t = self.ts.utc(
             sat_time.year, sat_time.month, sat_time.day,

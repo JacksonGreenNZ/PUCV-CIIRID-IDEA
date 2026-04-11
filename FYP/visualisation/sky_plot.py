@@ -11,11 +11,33 @@ from core.runtime_dependencies import get_ffmpeg_path
 
 class SkyPlot:
     """
-    Dual animated hemisphere projection:
-    Left: full sky view with absolute target track
-    Right: target-centred relative view with gain-coloured satellite positions
+    Dual animated hemisphere projection of satellite interference events.
+
+    Produces a two-panel polar animation:
+    - Left panel: full-sky view in absolute alt/az coordinates, showing the
+      target's track across the sky and all interfering satellite positions.
+    - Right panel: target-centred relative view scaled to the beam prefilter
+      radius, with satellites colour-mapped by gain percentage.
+
+    Frames are driven by the precomputed 1-second time array from the Observer,
+    with satellite positions sourced from the interference checker results dict.
     """
+
     def __init__(self, beam_model: BeamModel, observer: Observer, results: list):
+        """
+        Prepare data structures for animation.
+
+        Organises the flat results list into a time-keyed dict and extracts
+        the precomputed target track arrays from the Observer.
+
+        :param beam_model: BeamModel instance used for the analysis run.
+            Supplies prefilter radius and gain threshold for plot scaling.
+        :param observer: Observer instance used for the analysis run.
+            Supplies the precomputed time array and target alt/az tracks.
+        :param results: List of interference event dicts as returned by
+            InterferenceChecker, each containing time_utc, satellite,
+            sat_alt_deg, sat_az_deg, target_alt_deg, target_az_deg, gain_percent.
+        """
         self.beam_model = beam_model
         self.observer = observer
         self.results = results
@@ -58,10 +80,23 @@ class SkyPlot:
         r = np.degrees(np.arccos(np.clip(cos_sep, -1, 1)))
         return theta, r
 
-    def animate(self, save_path=None, progress_callback=None):
+    def animate(self, save_path: str | None = None, progress_callback=None) -> None:
         """
-        Renders dual animated hemisphere projection.
-        Optionally saves to file if save_path is provided.
+        Render the dual-panel hemisphere animation.
+
+        Iterates over every second in the observation window. For each frame,
+        the target marker is updated on both plots and any interfering satellites
+        visible at that timestamp are drawn as scatter points coloured by gain
+        percentage (plasma colormap, 0–100%).
+
+        When ``save_path`` is provided the animation is written to an MP4 via
+        FFmpeg (10 fps, 150 dpi). Without a path, the animation is displayed
+        interactively via ``plt.show()``.
+
+        :param save_path: Destination file path for MP4 export, or None to
+            display interactively.
+        :param progress_callback: Optional callable invoked by matplotlib's
+            animation writer as ``callback(current_frame, total_frames)``.
         """
         fig = plt.figure(figsize=(16, 8))
         fig.patch.set_facecolor('#1a1a2e')
