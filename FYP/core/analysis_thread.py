@@ -105,8 +105,10 @@ class VideoExportThread(QThread):
 
     def run(self):
         try:
-            import shutil
-            if not shutil.which("ffmpeg"):
+            from core.runtime_dependencies import get_ffmpeg_path
+            try:
+                get_ffmpeg_path()
+            except RuntimeError:
                 self.failed.emit(
                     "ffmpeg not found. Please install ffmpeg and ensure it is on your PATH.\n"
                     "Download from https://ffmpeg.org/download.html"
