@@ -1,0 +1,243 @@
+name: Build & Package
+
+# Runs automatically on version tags (e.g. v1.2.3).
+# Can also be triggered manually from the Actions tab.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Windows — standalone .exe  +  Inno Setup installer
+  # ──────────────────────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # The Inno Setup script bundles FFmpeg from vendor\ffmpeg\.
+      # We download the GPL essentials build (includes ffmpeg.exe / ffprobe.exe).
+      - name: Download FFmpeg for bundling
+        shell: pwsh
+        run: |
+          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+          Invoke-WebRequest -Uri $url -OutFile ffmpeg.zip
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-tmp
+          $binDir = Get-ChildItem ffmpeg-tmp -Recurse -Directory -Filter bin |
+                    Select-Object -First 1
+          New-Item -ItemType Directory -Path "vendor\ffmpeg" -Force | Out-Null
+          Copy-Item "$($binDir.FullName)\*" -Destination "vendor\ffmpeg\"
+
+      - name: Build executable (PyInstaller)
+        shell: pwsh
+        run: |
+          pyinstaller --onefile --clean `
+            --distpath dist `
+            --workpath build `
+            --name ClearSkyRFI `
+            --icon "GUI\icons\icon.ico" `
+            --add-data "visualisation\spinner.gif;visualisation" `
+            --additional-hooks-dir=hooks `
+            app.py
+
+      # Inno Setup 6 is pre-installed on windows-latest runners.
+      - name: Build Inno Setup installer
+        shell: cmd
+        run: '"%PROGRAMFILES(X86)%\Inno Setup 6\ISCC.exe" ClearSkyRFI.iss'
+
+      - name: Upload standalone .exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearSkyRFI-windows-exe
+          path: dist\ClearSkyRFI.exe
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearSkyRFI-windows-installer
+          path: installer\ClearSkyRFI-Setup.exe
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # Linux — standalone binary  +  .deb package
+  # ──────────────────────────────────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      # ffmpeg is a runtime dependency declared in the .deb control file.
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build binary (PyInstaller)
+        run: |
+          pyinstaller --onefile --clean \
+            --distpath dist \
+            --workpath build \
+            --name ClearSkyRFI \
+            --icon "GUI/icons/icon.ico" \
+            --add-data "visualisation/spinner.gif:visualisation" \
+            --additional-hooks-dir=hooks \
+            app.py
+
+      - name: Package as .deb
+        run: |
+          # ── staging tree ─────────────────────────────────────────────────
+          mkdir -p clearskyrfi-deb/DEBIAN
+          mkdir -p clearskyrfi-deb/usr/bin
+          mkdir -p clearskyrfi-deb/usr/share/applications
+          mkdir -p clearskyrfi-deb/usr/share/icons/hicolor
+
+          # binary
+          cp dist/ClearSkyRFI clearskyrfi-deb/usr/bin/
+          chmod 755 clearskyrfi-deb/usr/bin/ClearSkyRFI
+
+          # icon theme
+          cp -r GUI/icons/linux_icon/hicolor/* \
+                clearskyrfi-deb/usr/share/icons/hicolor/
+
+          # ── DEBIAN/control ───────────────────────────────────────────────
+          cat > clearskyrfi-deb/DEBIAN/control <<'EOF'
+          Package: clearskyrfi
+          Version: 0.0.1
+          Section: science
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Jackson Green <jacksonuea@gmail.com>
+          Depends: ffmpeg
+          Description: Satellite RFI Predictor
+           Predicts radio frequency interference from satellite constellations
+           during radio astronomy observations.
+          EOF
+          chmod 644 clearskyrfi-deb/DEBIAN/control
+
+          # ── .desktop entry ───────────────────────────────────────────────
+          cat > clearskyrfi-deb/usr/share/applications/clearskyrfi.desktop <<'EOF'
+          [Desktop Entry]
+          Name=ClearSkyRFI
+          Comment=Satellite RFI Predictor
+          Exec=/usr/bin/ClearSkyRFI
+          Icon=ClearSkyRFI
+          Terminal=false
+          Type=Application
+          Categories=Science;
+          EOF
+          chmod 644 clearskyrfi-deb/usr/share/applications/clearskyrfi.desktop
+
+          # ── build .deb ───────────────────────────────────────────────────
+          dpkg-deb --build clearskyrfi-deb clearskyrfi-1.0.0-amd64.deb
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearSkyRFI-linux-binary
+          path: dist/ClearSkyRFI
+
+      - name: Upload .deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearSkyRFI-linux-deb
+          path: clearskyrfi-1.0.0-amd64.deb
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # macOS — standalone binary  +  DMG
+  # ──────────────────────────────────────────────────────────────────────────
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install system dependencies
+        run: brew install ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build binary (PyInstaller)
+        run: |
+          pyinstaller --onefile --clean \
+            --distpath dist \
+            --workpath build \
+            --name ClearSkyRFI \
+            --icon "GUI/icons/MyIcon.icns" \
+            --add-data "visualisation/spinner.gif:visualisation" \
+            --additional-hooks-dir=hooks \
+            app.py
+
+      - name: Package as DMG
+        run: |
+          mkdir dmg-contents
+          cp dist/ClearSkyRFI dmg-contents/
+          hdiutil create \
+            -volname ClearSkyRFI \
+            -srcfolder dmg-contents \
+            -ov -format UDZO \
+            ClearSkyRFI.dmg
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearSkyRFI-macos-binary
+          path: dist/ClearSkyRFI
+
+      - name: Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClearSkyRFI-macos-dmg
+          path: ClearSkyRFI.dmg
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # GitHub Release — attaches all artifacts (tag pushes only)
+  # ──────────────────────────────────────────────────────────────────────────
+  release:
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/ClearSkyRFI-windows-exe/ClearSkyRFI.exe
+            artifacts/ClearSkyRFI-windows-installer/ClearSkyRFI-Setup.exe
+            artifacts/ClearSkyRFI-linux-binary/ClearSkyRFI
+            artifacts/ClearSkyRFI-linux-deb/clearskyrfi-1.0.0-amd64.deb
+            artifacts/ClearSkyRFI-macos-binary/ClearSkyRFI
+            artifacts/ClearSkyRFI-macos-dmg/ClearSkyRFI.dmg
