@@ -1,7 +1,7 @@
 name: Build & Package
 
 # Runs automatically on version tags (e.g. v1.2.3).
-# Can also be triggered manually from the Actions tab.
+# Can also be triggered manually from the Actions tab (version → 0.0.0-dev).
 on:
   push:
     tags:
@@ -17,6 +17,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set version from tag
+        shell: pwsh
+        run: |
+          $ref = $env:GITHUB_REF_NAME
+          if ($ref -match '^v(\d.*)') { $v = $Matches[1] } else { $v = "0.0.0-dev" }
+          echo "VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -52,10 +59,15 @@ jobs:
             --additional-hooks-dir=hooks `
             app.py
 
+      # Patch the version in the .iss file then compile.
       # Inno Setup 6 is pre-installed on windows-latest runners.
       - name: Build Inno Setup installer
-        shell: cmd
-        run: '"%PROGRAMFILES(X86)%\Inno Setup 6\ISCC.exe" ClearSkyRFI.iss'
+        shell: pwsh
+        run: |
+          (Get-Content ClearSkyRFI.iss) `
+            -replace 'AppVersion=.*', "AppVersion=$env:VERSION" |
+            Set-Content ClearSkyRFI.iss
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" ClearSkyRFI.iss
 
       - name: Upload standalone .exe
         uses: actions/upload-artifact@v4
@@ -76,6 +88,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: |
+          if [[ "$GITHUB_REF_NAME" =~ ^v([0-9].*) ]]; then
+            echo "VERSION=${BASH_REMATCH[1]}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=0.0.0-dev" >> "$GITHUB_ENV"
+          fi
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -105,6 +125,8 @@ jobs:
 
       - name: Package as .deb
         run: |
+          DEB_NAME="clearskyrfi-${VERSION}-amd64.deb"
+
           # ── staging tree ─────────────────────────────────────────────────
           mkdir -p clearskyrfi-deb/DEBIAN
           mkdir -p clearskyrfi-deb/usr/bin
@@ -120,9 +142,9 @@ jobs:
                 clearskyrfi-deb/usr/share/icons/hicolor/
 
           # ── DEBIAN/control ───────────────────────────────────────────────
-          cat > clearskyrfi-deb/DEBIAN/control <<'EOF'
+          cat > clearskyrfi-deb/DEBIAN/control <<EOF
           Package: clearskyrfi
-          Version: 0.0.1
+          Version: ${VERSION}
           Section: science
           Priority: optional
           Architecture: amd64
@@ -148,7 +170,8 @@ jobs:
           chmod 644 clearskyrfi-deb/usr/share/applications/clearskyrfi.desktop
 
           # ── build .deb ───────────────────────────────────────────────────
-          dpkg-deb --build clearskyrfi-deb clearskyrfi-1.0.0-amd64.deb
+          dpkg-deb --build clearskyrfi-deb "$DEB_NAME"
+          echo "DEB_NAME=$DEB_NAME" >> "$GITHUB_ENV"
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
@@ -160,7 +183,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ClearSkyRFI-linux-deb
-          path: clearskyrfi-1.0.0-amd64.deb
+          path: ${{ env.DEB_NAME }}
 
   # ──────────────────────────────────────────────────────────────────────────
   # macOS — standalone binary  +  DMG
@@ -169,6 +192,14 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set version from tag
+        run: |
+          if [[ "$GITHUB_REF_NAME" =~ ^v([0-9].*) ]]; then
+            echo "VERSION=${BASH_REMATCH[1]}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=0.0.0-dev" >> "$GITHUB_ENV"
+          fi
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -195,13 +226,15 @@ jobs:
 
       - name: Package as DMG
         run: |
+          DMG_NAME="ClearSkyRFI-${VERSION}-macos.dmg"
           mkdir dmg-contents
           cp dist/ClearSkyRFI dmg-contents/
           hdiutil create \
             -volname ClearSkyRFI \
             -srcfolder dmg-contents \
             -ov -format UDZO \
-            ClearSkyRFI.dmg
+            "$DMG_NAME"
+          echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_ENV"
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
@@ -213,7 +246,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ClearSkyRFI-macos-dmg
-          path: ClearSkyRFI.dmg
+          path: ${{ env.DMG_NAME }}
 
   # ──────────────────────────────────────────────────────────────────────────
   # GitHub Release — attaches all artifacts (tag pushes only)
@@ -238,6 +271,6 @@ jobs:
             artifacts/ClearSkyRFI-windows-exe/ClearSkyRFI.exe
             artifacts/ClearSkyRFI-windows-installer/ClearSkyRFI-Setup.exe
             artifacts/ClearSkyRFI-linux-binary/ClearSkyRFI
-            artifacts/ClearSkyRFI-linux-deb/clearskyrfi-1.0.0-amd64.deb
+            artifacts/ClearSkyRFI-linux-deb/*.deb
             artifacts/ClearSkyRFI-macos-binary/ClearSkyRFI
-            artifacts/ClearSkyRFI-macos-dmg/ClearSkyRFI.dmg
+            artifacts/ClearSkyRFI-macos-dmg/*.dmg
