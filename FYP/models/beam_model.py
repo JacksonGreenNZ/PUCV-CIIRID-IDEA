@@ -26,6 +26,9 @@ class BeamModel:
         self.wavelength = 3e8 / frequency_hz if frequency_hz != 0 else 0
         self.threshold = gain_cutoff_percent / 100.0
         self.bypass = bypass
+        if not bypass:
+            self._scan_angles = np.linspace(0.01, 89.9, 50000)
+            self._scan_gains = np.array([self.airy_gain(t) for t in self._scan_angles])
         self.prefilter_radius_deg = 0.0 if bypass else self.compute_prefilter_radius()
         self.fwhm_deg = 0.0 if bypass else self._compute_fwhm()
 
@@ -41,7 +44,7 @@ class BeamModel:
         :returns: Normalised gain in [0, 1], where 1.0 is peak (boresight).
         """
         if self.wavelength == 0:
-            return 50 #extra handling just in case on bypass
+            return 1.0
         theta_rad = np.radians(theta_deg)
         x = np.pi * self.diameter * np.sin(theta_rad) / self.wavelength
         if np.isclose(x, 0):
@@ -52,20 +55,38 @@ class BeamModel:
         """
         Find the outermost angular radius at which gain exceeds the threshold.
 
-        Scans from 90° inward and uses Brent's method to refine the crossing
-        point. The result is passed to SOPP as the beamwidth, so only
-        satellites within this cone are evaluated by the interference checker.
+        The result is passed to SOPP as the beamwidth, so only satellites
+        within this cone are evaluated by the interference checker.
 
         :returns: Prefilter radius in degrees, or 0.0 if no crossing is found.
         """
-        angles = np.linspace(89.9, 0.01, 50000)
-        for i, theta in enumerate(angles):
-            if self.airy_gain(theta) >= self.threshold:
-                return cast(float, brentq(
-                    lambda t: self.airy_gain(t) - self.threshold,
-                    angles[i], angles[i - 1]
+        crossings = self.gain_contour_radii(self.threshold * 100)
+        return crossings[-1] if crossings else 0.0
+
+    def gain_contour_radii(self, gain_percent: float) -> list[float]:
+        """
+        Find all angular radii where the Airy gain equals a given level.
+
+        Uses the cached scan computed at construction. Returns every crossing
+        of the target gain level, covering both the main beam edge and sidelobe
+        boundaries. Returns an empty list in bypass mode.
+
+        :param gain_percent: Target gain level as a percentage of peak (0–100).
+        :returns: List of angular radii in degrees where gain == gain_percent.
+        """
+        if self.bypass or self.wavelength == 0:
+            return []
+        level = gain_percent / 100.0
+        diff = self._scan_gains - level
+        crossings = []
+        for i in range(1, len(diff)):
+            if diff[i - 1] * diff[i] < 0:
+                root = cast(float, brentq(
+                    lambda t: self.airy_gain(t) - level,
+                    self._scan_angles[i - 1], self._scan_angles[i]
                 ))
-        return 0.0
+                crossings.append(root)
+        return crossings
 
     def _compute_fwhm(self) -> float:
         """
@@ -73,14 +94,8 @@ class BeamModel:
 
         :returns: FWHM radius in degrees, or 0.0 if no crossing is found.
         """
-        angles = np.linspace(0.01, 89.9, 50000)
-        for i, theta in enumerate(angles):
-            if self.airy_gain(theta) < 0.5:
-                return cast(float, brentq(
-                    lambda t: self.airy_gain(t) - 0.5,
-                    angles[i - 1], angles[i]
-                ))
-        return 0.0
+        crossings = self.gain_contour_radii(50.0)
+        return crossings[0] if crossings else 0.0
 
     def interference_gain(self, theta_deg: float) -> float | None:
         """

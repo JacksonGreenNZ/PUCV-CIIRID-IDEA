@@ -151,6 +151,15 @@ class SkyPlot:
                     color='red', linestyle=':', linewidth=1,
                     label=f'FWHM ({self.beam_model.fwhm_deg:.2f}°)')
 
+        # gain contour circles at every crossing of the gain cutoff threshold
+        contour_radii = self.beam_model.gain_contour_radii(self.gain_cutoff_percent)
+        for i, r in enumerate(contour_radii):
+            if r <= self.plot_radius:
+                ax_rel.plot(boundary_theta,
+                            np.full_like(boundary_theta, r),
+                            color='orange', linestyle=':', linewidth=0.8,
+                            label=f'{self.gain_cutoff_percent}% gain' if i == 0 else '_nolegend_')
+
         # target locked at centre
         ax_rel.plot(0, 0, 'g*', markersize=12, label='Target')
 
