@@ -1,6 +1,21 @@
+import sys
+import shutil
 import numpy as np
-from skyfield.api import load, wgs84, Star
+from skyfield.api import Loader, wgs84, Star
 from datetime import datetime, timezone
+from pathlib import Path
+from core.paths import get_base_dir, is_frozen
+
+def _seed_ephemeris():
+    """Copy de421.bsp from the PyInstaller bundle to the user data dir if not present."""
+    dest = get_base_dir() / "de421.bsp"
+    if not dest.exists() and is_frozen():
+        bundled = Path(getattr(sys, "_MEIPASS", "")) / "de421.bsp"
+        if bundled.exists():
+            shutil.copy2(bundled, dest)
+
+_seed_ephemeris()
+load = Loader(get_base_dir())
 
 class Observer:
     """

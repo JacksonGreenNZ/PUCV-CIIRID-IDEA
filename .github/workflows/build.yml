@@ -40,6 +40,10 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Download de421.bsp ephemeris
+        shell: pwsh
+        run: python -c "from skyfield.api import load; load('de421.bsp')"
+
       # The Inno Setup script bundles FFmpeg from vendor\ffmpeg\.
       # We download the GPL essentials build (includes ffmpeg.exe / ffprobe.exe).
       - name: Download FFmpeg for bundling
@@ -62,6 +66,7 @@ jobs:
             --name ClearSkyRFI `
             --icon "GUI\icons\icon.ico" `
             --add-data "visualisation\spinner.gif;visualisation" `
+            --add-data "de421.bsp;." `
             --additional-hooks-dir=hooks `
             app.py
 
@@ -118,6 +123,9 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Download de421.bsp ephemeris
+        run: python -c "from skyfield.api import load; load('de421.bsp')"
+
       - name: Build binary (PyInstaller)
         run: |
           pyinstaller --onefile --clean \
@@ -126,6 +134,7 @@ jobs:
             --name ClearSkyRFI \
             --icon "GUI/icons/icon.ico" \
             --add-data "visualisation/spinner.gif:visualisation" \
+            --add-data "de421.bsp:." \
             --additional-hooks-dir=hooks \
             app.py
 
@@ -219,6 +228,9 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Download de421.bsp ephemeris
+        run: python -c "from skyfield.api import load; load('de421.bsp')"
+
       - name: Build binary (PyInstaller)
         run: |
           pyinstaller --onefile --clean \
@@ -227,6 +239,7 @@ jobs:
             --name ClearSkyRFI \
             --icon "GUI/icons/MyIcon.icns" \
             --add-data "visualisation/spinner.gif:visualisation" \
+            --add-data "de421.bsp:." \
             --additional-hooks-dir=hooks \
             app.py
 
