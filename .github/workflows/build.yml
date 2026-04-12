@@ -8,6 +8,12 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# All run: steps execute inside FYP/ by default.
+# Artifact path: values are relative to the repo root, so they need FYP/ prefix.
+defaults:
+  run:
+    working-directory: FYP
+
 jobs:
 
   # ──────────────────────────────────────────────────────────────────────────
@@ -73,13 +79,13 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ClearSkyRFI-windows-exe
-          path: dist\ClearSkyRFI.exe
+          path: FYP/dist/ClearSkyRFI.exe
 
       - name: Upload installer
         uses: actions/upload-artifact@v7
         with:
           name: ClearSkyRFI-windows-installer
-          path: installer\ClearSkyRFI-Setup.exe
+          path: FYP/installer/ClearSkyRFI-Setup.exe
 
   # ──────────────────────────────────────────────────────────────────────────
   # Linux — standalone binary  +  .deb package
@@ -177,13 +183,13 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ClearSkyRFI-linux-binary
-          path: dist/ClearSkyRFI
+          path: FYP/dist/ClearSkyRFI
 
       - name: Upload .deb package
         uses: actions/upload-artifact@v7
         with:
           name: ClearSkyRFI-linux-deb
-          path: ${{ env.DEB_NAME }}
+          path: FYP/${{ env.DEB_NAME }}
 
   # ──────────────────────────────────────────────────────────────────────────
   # macOS — standalone binary  +  DMG
@@ -240,13 +246,13 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: ClearSkyRFI-macos-binary
-          path: dist/ClearSkyRFI
+          path: FYP/dist/ClearSkyRFI
 
       - name: Upload DMG
         uses: actions/upload-artifact@v7
         with:
           name: ClearSkyRFI-macos-dmg
-          path: ${{ env.DMG_NAME }}
+          path: FYP/${{ env.DMG_NAME }}
 
   # ──────────────────────────────────────────────────────────────────────────
   # GitHub Release — attaches all artifacts (tag pushes only)
