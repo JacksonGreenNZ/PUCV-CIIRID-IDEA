@@ -7,8 +7,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from core.app_state import Observatory
+from core.paths import get_data_dir
 
-SAVED_OBSERVATORIES_FILE = Path("data/observatories.json")
+SAVED_OBSERVATORIES_FILE = get_data_dir() / "observatories.json"
 
 
 class ObservatoryDialog(QDialog):

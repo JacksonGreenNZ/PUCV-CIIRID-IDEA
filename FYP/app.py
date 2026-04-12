@@ -9,9 +9,10 @@ from os import environ
 from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QIcon
 
 from core.app_state import AppState
-from core.paths import get_base_dir
+from core.paths import get_base_dir, get_asset_path
 from enums.tle_group import TLEGroup
 from GUI.splash import SplashScreen
 from GUI.main_window import MainWindow
@@ -46,6 +47,15 @@ logging.basicConfig(
 
 def run():
     app = QApplication(sys.argv)
+
+    if system == "Windows":
+        icon_path = get_asset_path("GUI/icons/icon.ico")
+    elif system == "Darwin":
+        icon_path = get_asset_path("GUI/icons/MyIcon.icns")
+    else:
+        icon_path = get_asset_path("GUI/icons/linux_icon/hicolor/256x256/apps/ClearSkyRFI.png")
+    app.setWindowIcon(QIcon(icon_path))
+
     state = AppState()
 
     splash = SplashScreen(TLEGroup.ACTIVE)

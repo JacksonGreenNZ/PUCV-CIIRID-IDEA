@@ -6,10 +6,11 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from core.app_state import Target
+from core.paths import get_data_dir
 import json
 from pathlib import Path
 
-SAVED_TARGETS_FILE = Path("data/targets.json")
+SAVED_TARGETS_FILE = get_data_dir() / "targets.json"
 
 
 class TargetDialog(QDialog):
