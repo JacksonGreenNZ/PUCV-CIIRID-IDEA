@@ -1,21 +1,5 @@
 [
   {
-    "name": "Vela",
-    "ra_hours": 8.589,
-    "dec_degrees": -45.2,
-    "azimuth_deg": null,
-    "altitude_deg": null,
-    "is_static": false
-  },
-  {
-    "name": "Targ1",
-    "ra_hours": null,
-    "dec_degrees": null,
-    "azimuth_deg": 10.0,
-    "altitude_deg": 10.0,
-    "is_static": true
-  },
-  {
     "name": "12GHz Spike Location",
     "ra_hours": null,
     "dec_degrees": null,

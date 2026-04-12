@@ -121,6 +121,8 @@ class AppState(QObject):
         path, _ = QFileDialog.getSaveFileName(None, "Export CSV", default, "CSV Files (*.csv)")
         if not path:
             return
+        if not path.endswith(".csv"):
+            path += ".csv"
         fieldnames = [
             "time_utc", "satellite", "sat_alt_deg", "sat_az_deg",
             "target_alt_deg", "target_az_deg", "angular_sep_deg", "gain_percent"
@@ -139,6 +141,8 @@ class AppState(QObject):
         path, _ = QFileDialog.getSaveFileName(None, "Export Video", default, "Video Files (*.mp4)")
         if not path:
             return
+        if not path.endswith(".mp4"):
+            path += ".mp4"
         self._video_thread = VideoExportThread(
             self._results.beam_model,
             self._results.observer,
