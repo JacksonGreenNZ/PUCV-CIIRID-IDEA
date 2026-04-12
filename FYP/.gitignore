@@ -2,3 +2,5 @@ build/
 dist/
 *.spec
 venv/
+data/observatories.json
+data/targets.json
