@@ -71,14 +71,14 @@ class BeamModel:
         Return the gain percentage at the given offset if it exceeds the
         threshold, or None if the satellite is below the interference cutoff.
 
-        In bypass mode, all offsets return a gain value (top-hat beam).
+        In bypass mode, all offsets return a flat 100% gain (top-hat beam).
 
         :param theta_deg: Angular separation from boresight in degrees.
         :returns: Gain as a percentage of peak (0–100), or None if below threshold.
         """
-        gain = self.airy_gain(theta_deg)
         if self.bypass:
-            return gain * 100
+            return 100.0
+        gain = self.airy_gain(theta_deg)
         if gain >= self.threshold:
             return gain * 100
         return None
