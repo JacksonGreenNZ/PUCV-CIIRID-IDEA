@@ -27,6 +27,7 @@ class BeamModel:
         self.threshold = gain_cutoff_percent / 100.0
         self.bypass = bypass
         self.prefilter_radius_deg = 0.0 if bypass else self.compute_prefilter_radius()
+        self.fwhm_deg = 0.0 if bypass else self._compute_fwhm()
 
     def airy_gain(self, theta_deg: float) -> float:
         """
@@ -63,6 +64,21 @@ class BeamModel:
                 return cast(float, brentq(
                     lambda t: self.airy_gain(t) - self.threshold,
                     angles[i], angles[i - 1]
+                ))
+        return 0.0
+
+    def _compute_fwhm(self) -> float:
+        """
+        Find the half-power (FWHM) radius — the angle at which gain drops to 50% of peak.
+
+        :returns: FWHM radius in degrees, or 0.0 if no crossing is found.
+        """
+        angles = np.linspace(0.01, 89.9, 50000)
+        for i, theta in enumerate(angles):
+            if self.airy_gain(theta) < 0.5:
+                return cast(float, brentq(
+                    lambda t: self.airy_gain(t) - 0.5,
+                    angles[i - 1], angles[i]
                 ))
         return 0.0
 

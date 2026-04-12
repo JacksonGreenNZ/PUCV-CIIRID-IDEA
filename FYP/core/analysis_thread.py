@@ -67,7 +67,8 @@ class AnalysisThread(QThread):
                 bypass=self._run_config.bypass_airy
             )
             if self._run_config.bypass_airy:
-                beam_model.prefilter_radius_deg = self._run_config.manual_beamwidth_deg/2#half beamwidth
+                beam_model.prefilter_radius_deg = self._run_config.manual_beamwidth_deg / 2
+                beam_model.fwhm_deg = self._run_config.manual_beamwidth_deg / 2
 
             runner = SOPPRunner(beam_model, self._run_config, self._tle_file)
             interference_events = runner.run()

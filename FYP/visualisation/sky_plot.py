@@ -145,11 +145,11 @@ class SkyPlot:
                     color='blue', linestyle='--', linewidth=1,
                     label=f'Prefilter ({self.beam_model.prefilter_radius_deg:.2f}°)')
 
-        # gain cutoff circle
+        # FWHM circle
         ax_rel.plot(boundary_theta,
-                    np.full_like(boundary_theta, self.beam_model.prefilter_radius_deg / 1.5),
+                    np.full_like(boundary_theta, self.beam_model.fwhm_deg),
                     color='red', linestyle=':', linewidth=1,
-                    label=f'{self.gain_cutoff_percent}% gain threshold')
+                    label=f'FWHM ({self.beam_model.fwhm_deg:.2f}°)')
 
         # target locked at centre
         ax_rel.plot(0, 0, 'g*', markersize=12, label='Target')
