@@ -51,7 +51,7 @@ jobs:
           $binDir = Get-ChildItem ffmpeg-tmp -Recurse -Directory -Filter bin |
                     Select-Object -First 1
           New-Item -ItemType Directory -Path "vendor\ffmpeg" -Force | Out-Null
-          Copy-Item "$($binDir.FullName)\*" -Destination "vendor\ffmpeg\"
+          Copy-Item "$($binDir.FullName)\ffmpeg.exe" -Destination "vendor\ffmpeg\"
 
       - name: Build executable (PyInstaller)
         shell: pwsh
