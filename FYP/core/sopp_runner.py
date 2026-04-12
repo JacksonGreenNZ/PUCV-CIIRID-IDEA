@@ -24,7 +24,8 @@ class SOPPRunner:
 
     @staticmethod
     def select_data(group: TLEGroup | str) -> str:
-        from skyfield.api import load
+        from skyfield.api import Loader
+        load = Loader('.', verbose=False)
         max_days = 7.0
         data_dir.mkdir(exist_ok=True)
         filename = str(data_dir / f"{group}.tle")
