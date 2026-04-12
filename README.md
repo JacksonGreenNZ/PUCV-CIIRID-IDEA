@@ -2,9 +2,9 @@
 
 A desktop application for predicting radio frequency interference (RFI) from satellite constellations during radio astronomy observations. Given an observatory location, observation target, and time window, it identifies clean stretches of time where no satellites pass through the telescope beam.
 
-<p align="center"><a href="https://github.com/JacksonGreenNZ/PUCV-CIIRID-IDEA/releases/download/v0.0.2/clearskyrfi-0.0.2-amd64.deb"> <img width="202" height="39" alt="linuxinst" src="https://github.com/user-attachments/assets/002f72be-32bf-4eaf-b72f-52c452901034" /></a>&nbsp;&nbsp;&nbsp;
-<a href="https://github.com/JacksonGreenNZ/PUCV-CIIRID-IDEA/releases/download/v0.0.2/ClearSkyRFI-Setup.exe"> <img width="247" height="39" alt="wininst" src="https://github.com/user-attachments/assets/23e98fa0-e8db-4399-bd84-2e20b03052ae" /></a>&nbsp;&nbsp;&nbsp;
-<a href="https://github.com/JacksonGreenNZ/PUCV-CIIRID-IDEA/releases/download/v0.0.2/ClearSkyRFI-0.0.2-macos.dmg"><img width="223" height="39" alt="macos" src="https://github.com/user-attachments/assets/2ad2dfbb-a3a4-4470-b6d3-cf7c9ad2e10f" /> </a> </p>
+<p align="center"><a href="https://github.com/JacksonGreenNZ/PUCV-CIIRID-IDEA/releases/download/v0.0.3/clearskyrfi-0.0.3-amd64.deb"> <img width="202" height="39" alt="linuxinst" src="https://github.com/user-attachments/assets/002f72be-32bf-4eaf-b72f-52c452901034" /></a>&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/JacksonGreenNZ/PUCV-CIIRID-IDEA/releases/download/v0.0.3/ClearSkyRFI-Setup.exe"> <img width="247" height="39" alt="wininst" src="https://github.com/user-attachments/assets/23e98fa0-e8db-4399-bd84-2e20b03052ae" /></a>&nbsp;&nbsp;&nbsp;
+<a href="https://github.com/JacksonGreenNZ/PUCV-CIIRID-IDEA/releases/download/v0.0.3/ClearSkyRFI-0.0.3-macos.dmg"><img width="223" height="39" alt="macos" src="https://github.com/user-attachments/assets/2ad2dfbb-a3a4-4470-b6d3-cf7c9ad2e10f" /> </a> </p>
 
 
 ---
