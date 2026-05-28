@@ -40,12 +40,14 @@ import matplotlib.dates as mdates
 from datetime import timezone, timedelta
 import os
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-SAT_FILE    = r"ClearSkyRFIData202601211301.csv"
-DATA_FOLDER = r"antenna_readings/1-15 First setup.csv"
-OUT_DIR     = r"C:\Users\hijox\Documents\UNI\Final Year Project\Program Images\analysis for paper"
+SAT_FILE    = os.path.join(SCRIPT_DIR, "ClearSkyRFIData202601211301.csv")
+DATA_FOLDER = os.path.join(SCRIPT_DIR, "..", "antenna_readings", "1-15 First setup.csv")
+OUT_DIR     = SCRIPT_DIR
 UTC_OFFSET  = timedelta(hours=3)   # Chile summer time is UTC-3
 FWHM        = 60.0
 SIGMA       = FWHM / (2 * np.sqrt(2 * np.log(2)))
@@ -129,7 +131,9 @@ ax.set_ylabel("Beam-weighted satellite density (a.u.)")
 ax.set_title("Beam-weighted Satellite Density vs EOS Measurement Times\n(green = pol 0, orange = pol 90, dashed red = ~13:06 spike)")
 ax.grid(True, alpha=0.4)
 plt.tight_layout()
-plt.savefig(os.path.join(OUT_DIR, "combined_density_vs_eos_times.png"), dpi=150, bbox_inches="tight")
+_out1 = os.path.join(OUT_DIR, "combined_density_vs_eos_times.png")
+if not os.path.exists(_out1):
+    plt.savefig(_out1, dpi=150, bbox_inches="tight")
 plt.show()
 
 # ---------------------------------------------------------------------------
@@ -172,7 +176,9 @@ for i, entry in enumerate(spectra):
 fig.suptitle("1-15 GHz Spectra at Azimuth 240° — Around 13:06 UTC Spike\n(green = pol 0°, orange = pol 90°)",
              fontsize=11)
 plt.tight_layout()
-plt.savefig(os.path.join(OUT_DIR, "combined_spectra_240deg.png"), dpi=150, bbox_inches="tight")
+_out2 = os.path.join(OUT_DIR, "combined_spectra_240deg.png")
+if not os.path.exists(_out2):
+    plt.savefig(_out2, dpi=150, bbox_inches="tight")
 plt.show()
 
 # ---------------------------------------------------------------------------
@@ -196,21 +202,20 @@ sdf = pd.DataFrame(summary)
 print("\n--- EOS measurements at 240 degrees ---")
 print(sdf[["label", "pol", "mean_power", "peak_power", "sat_density"]].to_string(index=False))
 
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+fig, ax = plt.subplots(figsize=(10, 5))
 
 x = range(len(sdf))
 xticks = sdf["label"].tolist()
 bar_colors = [pol_colors[p] for p in sdf["pol"]]
 
-ax1.bar(x, sdf["sat_density"], color=bar_colors, alpha=0.8)
-ax1.set_ylabel("Beam-weighted satellite density")
-ax1.set_title("Satellite Density and Antenna Power at Each 240 Measurement")
-ax1.grid(True, axis="y", alpha=0.4)
-
-ax2.bar(x, sdf["mean_power"], color=bar_colors, alpha=0.8)
-ax2.set_ylabel("Mean power across 1-15 GHz (dBm)")
-ax2.set_xlabel("Measurement time (UTC)")
-ax2.grid(True, axis="y", alpha=0.4)
+Y_BOTTOM = -61.25
+bar_heights = sdf["mean_power"] - Y_BOTTOM
+ax.bar(x, bar_heights, bottom=Y_BOTTOM, color=bar_colors, alpha=0.8)
+ax.set_ylim(Y_BOTTOM, sdf["mean_power"].max() + 0.25)
+ax.set_ylabel("Mean power across 1-15 GHz (dBm)")
+ax.set_xlabel("Measurement time (UTC)")
+ax.set_title("Mean Power Across 1–15 GHz at Each 240° Azimuth Measurement")
+ax.grid(True, axis="y", alpha=0.4)
 
 plt.xticks(list(x), xticks, rotation=15, fontsize=8)
 from matplotlib.patches import Patch
@@ -218,5 +223,7 @@ fig.legend(handles=[Patch(color="forestgreen", label="Pol 0"),
                     Patch(color="darkorange",  label="Pol 90")],
            loc="upper right", fontsize=8)
 plt.tight_layout()
-plt.savefig(os.path.join(OUT_DIR, "combined_power_vs_density.png"), dpi=150, bbox_inches="tight")
+_out3 = os.path.join(OUT_DIR, "mean_power_240deg.png")
+if not os.path.exists(_out3):
+    plt.savefig(_out3, dpi=150, bbox_inches="tight")
 plt.show()
