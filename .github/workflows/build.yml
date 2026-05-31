@@ -166,7 +166,7 @@ jobs:
           Priority: optional
           Architecture: amd64
           Maintainer: Jackson Green <jacksonuea@gmail.com>
-          Depends: ffmpeg, libxcb-cursor0
+          Depends: ffmpeg, libxcb-cursor0, libxcb-icccm4, libxcb-keysyms1
           Description: Satellite RFI Predictor
            Predicts radio frequency interference from satellite constellations
            during radio astronomy observations.
